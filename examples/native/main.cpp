@@ -9,7 +9,7 @@ double T1Wh = -2, SumWh = -2;
 typedef struct {
   const unsigned char OBIS[6];
   void (*Handler)(); 
-} SMLHandler;
+} OBISHandler;
 
 void Manufacturer() {
   smlOBISManufacturer(manuf, MAX_STR_MANUF);
@@ -23,7 +23,7 @@ void PowerSum() {
   smlOBISWh(SumWh);
 }
 
-SMLHandler SMLHandlers[] = {
+OBISHandler OBISHandlers[] = {
   {{ 0x81, 0x81, 0xc7, 0x82, 0x03, 0xff }, &Manufacturer}, /* 129-129:199.130.3*255 */
   {{ 0x01, 0x00, 0x01, 0x08, 0x01, 0xff }, &PowerT1},      /*   1-  0:  1.  8.1*255 (T1) */
   {{ 0x01, 0x00, 0x01, 0x08, 0x00, 0xff }, &PowerSum},     /*   1-  0:  1.  8.0*255 (T1 + T2) */
@@ -43,10 +43,10 @@ int main () {
     }
     if (s == SML_LISTEND) {
       /* check handlers on last received list */
-      for (iHandler=0; SMLHandlers[iHandler].Handler != 0 && 
-            !(smlOBISCheck(SMLHandlers[iHandler].OBIS)); iHandler++);
-      if (SMLHandlers[iHandler].Handler != 0) {
-        SMLHandlers[iHandler].Handler(); 
+      for (iHandler=0; OBISHandlers[iHandler].Handler != 0 && 
+            !(smlOBISCheck(OBISHandlers[iHandler].OBIS)); iHandler++);
+      if (OBISHandlers[iHandler].Handler != 0) {
+        OBISHandlers[iHandler].Handler(); 
       }
     }
     if (s == SML_UNEXPECTED) {

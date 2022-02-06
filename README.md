@@ -4,7 +4,7 @@ Easy to use C++ library with a low memory footprint to parse SML messages byte b
 
 The library will control the last CRC value to check if the received data is correct. On any error the parser will reset and wait for valid data.
 
-Outsite the library handlers can be registered to work on received information.
+Outside the library handlers can be registered to work on received information.
 
 ## Example and usage
 
