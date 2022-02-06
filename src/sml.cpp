@@ -6,28 +6,38 @@
 #include "smlCrcTable.h"
 #include "sml.h"
 
+#ifdef DEBUG_ARDUINO
+char logBuff[200];
+#endif
+
 #ifdef DEBUG_NATIVE
 #define SML_LOG(...) do { printf(  __VA_ARGS__); } while (0)
 #define SML_TREELOG(level, ...) do { printf("%.*s", level, "        "); printf(  __VA_ARGS__); } while (0)
 #else
-#define SML_LOG(...) 
-#define SML_TREELOG(level, ...) 
+#ifdef DEBUG_ARDUINO
+#include <Arduino.h>
+#define SML_LOG(...) do { sprintf(logBuff, __VA_ARGS__); Serial.print(logBuff); } while (0)
+#define SML_TREELOG(level, ...) do { sprintf(logBuff, __VA_ARGS__); Serial.print(logBuff); } while (0)
+#else
+#define SML_LOG(...) do {  } while (0)
+#define SML_TREELOG(level, ...) do {  } while (0)
+#endif
 #endif 
 
 #define MAX_LIST_SIZE 80
-#define MAX_TREE_SIZE 5
+#define MAX_TREE_SIZE 10
 
 static sml_states_t currentState = SML_START;
 static char nodes[MAX_TREE_SIZE];
-static int currentLevel = 0;
+static unsigned char currentLevel = 0;
 static unsigned short crc = 0xFFFF;
 static unsigned short crcMine = 0xFFFF;
 static unsigned short crcReceived = 0x0000;
-static int len = 4;
+static unsigned char len = 4;
 static unsigned char listBuffer[MAX_LIST_SIZE]; /* keeps a two dimensional list as length + data array */
-static int listPos = 0;
+static unsigned char listPos = 0;
 
-void crc16(unsigned char byte) {
+void crc16(unsigned char & byte) {
   crc = smlCrcTable[(byte ^ crc) & 0xff] ^ (crc >> 8 & 0xff);
 }
 
@@ -36,7 +46,13 @@ void setState (sml_states_t state, int byteLen) {
   len = byteLen;
 }
 
-void checkMagicByte (unsigned char byte) {
+void pushListBuffer(unsigned char byte) {
+  if (listPos < MAX_LIST_SIZE) {
+    listBuffer[listPos++] = byte;
+  }
+}
+
+void checkMagicByte (unsigned char & byte) {
   unsigned int size = 0;
   while (currentLevel > 0 && nodes[currentLevel] == 0) {
     /* go back in tree if no nodes remaining */
@@ -50,14 +66,14 @@ void checkMagicByte (unsigned char byte) {
     nodes[currentLevel]--; /* reduce previous list */
     currentLevel++;
     nodes[currentLevel] = size;
-    SML_TREELOG(currentLevel, "LISTSTART with %i nodes\n", size);
+    SML_TREELOG(currentLevel, "LISTSTART on level %i with %i nodes\n", currentLevel, size);
     setState(SML_LISTSTART, size);
     listPos = 0;
   } else if (byte >= 0x01 && byte <= 0x6F && nodes[currentLevel] > 0) {
     if (byte == 0x01) {
       /* no data, get next */
       SML_TREELOG(currentLevel, " Data %i (empty)\n", nodes[currentLevel]);
-      listBuffer[listPos++] = 0;
+      pushListBuffer(0);
       if (nodes[currentLevel] == 1) {
         setState(SML_LISTEND, 1);
         SML_TREELOG(currentLevel, "LISTEND\n");
@@ -67,7 +83,7 @@ void checkMagicByte (unsigned char byte) {
     } else {
       size = (byte & 0x0F) - 1;
       SML_TREELOG(currentLevel, " Data %i (length = %i): ", nodes[currentLevel], size);
-      listBuffer[listPos++] = size;
+      pushListBuffer(size);
       setState(SML_DATA, size);
     }
     nodes[currentLevel]--; /* reduce current list */
@@ -84,49 +100,49 @@ void checkMagicByte (unsigned char byte) {
     setState(SML_HDATA, (byte & 0x0F) << 4);
   } else {
     /* Unexpected Byte */
-    SML_TREELOG(currentLevel, "UNEXPECTED %i >%x<\n", nodes[currentLevel], byte);
+    SML_TREELOG(currentLevel, "UNEXPECTED char >%02X< at level %i\n", byte, nodes[currentLevel]);
     setState(SML_UNEXPECTED, 4);
   }
 }
 
-sml_states_t smlState (unsigned char c) {
+sml_states_t smlState (unsigned char & currentByte) {
   int size;
   if (len > 0) len--;
-  crc16(c);
+  crc16(currentByte);
   switch (currentState) {
     case SML_UNEXPECTED:
     case SML_CHECKSUM_ERROR:
     case SML_FINAL:
     case SML_START:
       currentState = SML_START;
-      if (c != 0x1b) setState(SML_UNEXPECTED, 4);
+      if (currentByte != 0x1b) setState(SML_UNEXPECTED, 4);
       if (len == 0) {
         SML_TREELOG(0, "START\n");
         setState(SML_VERSION, 4);
       }
     break;
     case SML_VERSION:
-      if (c != 0x01) setState(SML_UNEXPECTED, 4);
+      if (currentByte != 0x01) setState(SML_UNEXPECTED, 4);
       if (len == 0) {
         setState(SML_BLOCKSTART, 1);
       }
     break;
     case SML_END:
-      if (c != 0x1b) setState(SML_UNEXPECTED, 4);
+      if (currentByte != 0x1b) setState(SML_UNEXPECTED, 4);
       if (len == 0) {
         setState(SML_CHECKSUM, 4);
       }
     break;
     case SML_CHECKSUM:
-      // SML_LOG("CHECK: %02X\n", c);
+      // SML_LOG("CHECK: %02X\n", currentByte);
       if (len == 2) {
         crcMine = crc ^ 0xFFFF;
       }
       if (len == 1) {
-        crcReceived += c;
+        crcReceived += currentByte;
       }
       if (len == 0) {
-        crcReceived = crcReceived | (c << 8);
+        crcReceived = crcReceived | (currentByte << 8);
         SML_LOG("Received checksum: %02X\n", crcReceived);
         SML_LOG("Calculated checksum: %02X\n", crcMine);
         if (crcMine == crcReceived) {
@@ -138,14 +154,14 @@ sml_states_t smlState (unsigned char c) {
       }
     break;
     case SML_HDATA: 
-      size = len + c-1;
+      size = len + currentByte-1;
       setState(SML_DATA, size);
-      listBuffer[listPos++] = size;
+      pushListBuffer(size);
       SML_TREELOG(currentLevel, " Data (length = %i): ", size);
     break;
     case SML_DATA:
-      SML_LOG("%02X ", c);
-      listBuffer[listPos++] = c;
+      SML_LOG("%02X ", currentByte);
+      pushListBuffer(currentByte);
       if (nodes[currentLevel] == 0 && len == 0) {
         SML_LOG("\n");
         SML_TREELOG(currentLevel, "LISTEND\n");
@@ -161,7 +177,7 @@ sml_states_t smlState (unsigned char c) {
     case SML_LISTEND:
     case SML_BLOCKSTART:
     case SML_BLOCKEND:
-      checkMagicByte(c);
+      checkMagicByte(currentByte);
     break;
   }
   return currentState;
@@ -187,7 +203,7 @@ void smlOBISManufacturer(unsigned char * str, int maxSize) {
 }
 
 void smlOBISWh(double &wh) {
-  int i = 0, pos = 0, size = 0;
+  unsigned char i = 0, pos = 0, size = 0;
   char scaler = 0;
   wh = -1; /* unknown or error */
   double l = 0;
@@ -204,22 +220,22 @@ void smlOBISWh(double &wh) {
       size = (int)listBuffer[i];
       if (size == 5) {
         /* 40 bit */
-        l = (long int)listBuffer[i+1] << 32 
-          | listBuffer[i+2] << 24 
-          | listBuffer[i+3] << 16 
-          | listBuffer[i+4] << 8 
+        l = (long long int)listBuffer[i+1] << 32 
+          | (long int)listBuffer[i+2] << 24 
+          | (long int)listBuffer[i+3] << 16 
+          | (long int)listBuffer[i+4] << 8 
           | listBuffer[i+5]; 
       }
       if (size == 8) {
         /* 56 bit */
         l = 
-          (long int)listBuffer[i+1] << 56
-          | (long int)listBuffer[i+2] << 48 
-          | (long int)listBuffer[i+3] << 40 
-          | (long int)listBuffer[i+4] << 32 
-          | listBuffer[i+5] << 24 
-          | listBuffer[i+6] << 16 
-          | listBuffer[i+7] << 8 
+          (long long int)listBuffer[i+1] << 56
+          | (long long int)listBuffer[i+2] << 48 
+          | (long long int)listBuffer[i+3] << 40 
+          | (long long int)listBuffer[i+4] << 32 
+          | (long int)listBuffer[i+5] << 24 
+          | (long int)listBuffer[i+6] << 16 
+          | (long int)listBuffer[i+7] << 8 
           | listBuffer[i+8];
       }
       wh = l * pow(10, scaler);
