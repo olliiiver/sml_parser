@@ -1,10 +1,10 @@
 # Smart Message Language (SML) parser
 
-Easy to use C++ library with a low memory foodprint to parse SML messages byte by byte. 
+Easy to use C++ library with a low memory footprint to parse SML messages byte by byte.
 
-The library will control the last CRC value to check if the received data is correct. On any error the parser will reset and wait for valid data. 
+The library will control the last CRC value to check if the received data is correct. On any error the parser will reset and wait for valid data.
 
-Outsite the library handlers can be registered to work on received information. 
+Outsite the library handlers can be registered to work on received information.
 
 ## Example and usage
 
