@@ -1,7 +1,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
 #include "smlCrcTable.h"
 #include "sml.h"
@@ -204,7 +203,7 @@ void smlOBISManufacturer(unsigned char * str, int maxSize) {
 
 void smlOBISWh(double &wh) {
   unsigned char i = 0, pos = 0, size = 0;
-  char scaler = 0;
+  unsigned char scaler = 0;
   wh = -1; /* unknown or error */
   double l = 0;
   while (i < listPos) {
@@ -238,7 +237,15 @@ void smlOBISWh(double &wh) {
           | (long int)listBuffer[i+7] << 8 
           | listBuffer[i+8];
       }
-      wh = l * pow(10, scaler);
+      switch (scaler) {
+        case 0xFF: wh = l / 10; break;
+        case 0xFE: wh = l / 100; break;
+        case 0xFD: wh = l / 1000; break;
+        case 0xFC: wh = l / 10000; break;
+        case 0xFB: wh = l / 100000; break;
+        case 0xFA: wh = l / 1000000; break;
+        default: wh = -3;
+      }
     }
     i += listBuffer[i]+1;
   }

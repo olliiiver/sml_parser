@@ -1,6 +1,8 @@
 #ifndef SML_CRC_TABLE_H
 #define SML_CRC_TABLE_H
 
+#include <stdint.h>
+
 #ifdef ARDUINO
 #include <Arduino.h>
 static const uint16_t smlCrcTable[256] PROGMEM =
