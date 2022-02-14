@@ -37,7 +37,11 @@ static unsigned char listBuffer[MAX_LIST_SIZE]; /* keeps a two dimensional list 
 static unsigned char listPos = 0;
 
 void crc16(unsigned char & byte) {
+#ifdef ARDUINO
+  crc = pgm_read_word_near(&smlCrcTable[(byte ^ crc) & 0xff]) ^ (crc >> 8 & 0xff);
+#else
   crc = smlCrcTable[(byte ^ crc) & 0xff] ^ (crc >> 8 & 0xff);
+#endif
 }
 
 void setState (sml_states_t state, int byteLen) {
@@ -117,6 +121,13 @@ sml_states_t smlState (unsigned char & currentByte) {
       if (currentByte != 0x1b) setState(SML_UNEXPECTED, 4);
       if (len == 0) {
         SML_TREELOG(0, "START\n");
+        /* completely clean any garbage from crc checksum */
+        crc = 0xFFFF;
+        currentByte = 0x1b;
+        crc16(currentByte);
+        crc16(currentByte);
+        crc16(currentByte);
+        crc16(currentByte);
         setState(SML_VERSION, 4);
       }
     break;

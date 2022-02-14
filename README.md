@@ -1,10 +1,10 @@
 # Smart Message Language (SML) parser
 
-Easy to use C++ library with a low memory footprint to parse SML messages byte by byte.
+Easy to use C++ library with a low memory footprint to parse SML messages (based on BSI TR-03109-1) byte by byte from smart meters.
 
-The library will control the last CRC value to check if the received data is correct. On any error the parser will reset and wait for valid data.
+The library will control the last CRC value to check if the received data is correct. On any error, the parser will reset and wait for valid data. This allows to start parsing at any time. For example, a half received message is discarded. 
 
-Outside the library handlers can be registered to work on received information.
+Outside the library handlers can be registered to process received information.
 
 ## Example and usage
 
@@ -62,7 +62,7 @@ int main () {
 
 ## Debug mode
 
-If debug mode (see examples/native) is enabled, the SML data is displayed in a tree like structure.
+If debug mode via `DEBUG_ARDUINO` or `DEBUG_NATIVE` (see examples/native/platformio.ini) is enabled, the SML data is displayed in a tree like structure.
 
 ```
 START
