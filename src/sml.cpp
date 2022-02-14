@@ -5,23 +5,22 @@
 #include "smlCrcTable.h"
 #include "sml.h"
 
-#ifdef DEBUG_ARDUINO
+#ifdef SML_DEBUG
 char logBuff[200];
-#endif
 
-#ifdef DEBUG_NATIVE
+#ifdef SML_NATIVE
 #define SML_LOG(...) do { printf(  __VA_ARGS__); } while (0)
 #define SML_TREELOG(level, ...) do { printf("%.*s", level, "        "); printf(  __VA_ARGS__); } while (0)
-#else
-#ifdef DEBUG_ARDUINO
+#elif ARDUINO
 #include <Arduino.h>
 #define SML_LOG(...) do { sprintf(logBuff, __VA_ARGS__); Serial.print(logBuff); } while (0)
 #define SML_TREELOG(level, ...) do { sprintf(logBuff, __VA_ARGS__); Serial.print(logBuff); } while (0)
+#endif
+
 #else
 #define SML_LOG(...) do {  } while (0)
 #define SML_TREELOG(level, ...) do {  } while (0)
 #endif
-#endif 
 
 #define MAX_LIST_SIZE 80
 #define MAX_TREE_SIZE 10
@@ -138,7 +137,15 @@ sml_states_t smlState (unsigned char & currentByte) {
       }
     break;
     case SML_END:
-      if (currentByte != 0x1b) setState(SML_UNEXPECTED, 4);
+      if (currentByte == 0x00) {
+        /* some meters (EBZ?) continue with at least 2 more zero bytes */
+        setState(SML_END, 4);
+        break;
+      }
+      if (currentByte != 0x1b) {
+        SML_LOG("UNEXPECTED char >%02X< at SML_END\n", currentByte);
+        setState(SML_UNEXPECTED, 4);
+      }
       if (len == 0) {
         setState(SML_CHECKSUM, 4);
       }
@@ -174,7 +181,7 @@ sml_states_t smlState (unsigned char & currentByte) {
       pushListBuffer(currentByte);
       if (nodes[currentLevel] == 0 && len == 0) {
         SML_LOG("\n");
-        SML_TREELOG(currentLevel, "LISTEND\n");
+        SML_TREELOG(currentLevel, "LISTEND on level %i\n", currentLevel);
         currentState = SML_LISTEND; 
       } else if (len == 0) {
         currentState = SML_DATAEND;
@@ -228,6 +235,13 @@ void smlOBISWh(double &wh) {
     }
     if (pos == 6) {
       size = (int)listBuffer[i];
+      if (size == 4) {
+        /* 32 bit */
+        l = (long int)listBuffer[i+1] << 24 
+          | (long int)listBuffer[i+2] << 16 
+          | (long int)listBuffer[i+3] << 8 
+          | listBuffer[i+4]; 
+      }
       if (size == 5) {
         /* 40 bit */
         l = (long long int)listBuffer[i+1] << 32 
@@ -255,6 +269,9 @@ void smlOBISWh(double &wh) {
         case 0xFC: wh = l / 10000; break;
         case 0xFB: wh = l / 100000; break;
         case 0xFA: wh = l / 1000000; break;
+        case 0x01: wh = l / 10; break;
+        case 0x02: wh = l / 100; break;
+        case 0x03: wh = l / 1000; break;
         default: wh = -3;
       }
     }

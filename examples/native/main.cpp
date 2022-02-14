@@ -50,7 +50,7 @@ int main () {
       }
     }
     if (s == SML_UNEXPECTED) {
-      printf(">>> Unexpected byte! <<<\n");
+      printf(">>> Unexpected byte >%02X<! <<<\n", c);
     }
     if (s == SML_FINAL) {
       printf(">>> FINAL! Checksum OK\n");

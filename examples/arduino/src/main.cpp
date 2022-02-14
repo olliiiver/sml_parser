@@ -3,7 +3,7 @@
 #include "ehz_bin.h"
 #include <Arduino.h>
 
-// Continuously loops through a static message and outputs information to serial
+// Continuously loops through a static message from RAM and outputs information to serial
 
 double T1Wh = -2, SumWh = -2;
 

@@ -62,7 +62,7 @@ int main () {
 
 ## Debug mode
 
-If debug mode via `DEBUG_ARDUINO` or `DEBUG_NATIVE` (see examples/native/platformio.ini) is enabled, the SML data is displayed in a tree like structure.
+If debug mode via `SML_DEBUG` (see examples/native/platformio.ini) is enabled, the SML data is displayed in a tree like structure.
 
 ```
 START
