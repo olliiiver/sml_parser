@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <string.h>
 
@@ -22,7 +21,7 @@ char logBuff[200];
 #define SML_TREELOG(level, ...) do {  } while (0)
 #endif
 
-#define MAX_LIST_SIZE 80
+#define MAX_LIST_SIZE 64
 #define MAX_TREE_SIZE 10
 
 static sml_states_t currentState = SML_START;
@@ -54,6 +53,10 @@ void pushListBuffer(unsigned char byte) {
   }
 }
 
+void reduceList() {
+  if (currentLevel >= 0 && nodes[currentLevel] > 0) nodes[currentLevel]--; 
+}
+
 void checkMagicByte (unsigned char & byte) {
   unsigned int size = 0;
   while (currentLevel > 0 && nodes[currentLevel] == 0) {
@@ -65,8 +68,8 @@ void checkMagicByte (unsigned char & byte) {
   if (byte > 0x70 && byte < 0x7F) {
     /* new list */
     size = byte & 0x0F;
-    nodes[currentLevel]--; /* reduce previous list */
-    currentLevel++;
+    reduceList();
+    if (currentLevel < MAX_TREE_SIZE) currentLevel++;
     nodes[currentLevel] = size;
     SML_TREELOG(currentLevel, "LISTSTART on level %i with %i nodes\n", currentLevel, size);
     setState(SML_LISTSTART, size);
@@ -88,27 +91,30 @@ void checkMagicByte (unsigned char & byte) {
       pushListBuffer(size);
       setState(SML_DATA, size);
     }
-    nodes[currentLevel]--; /* reduce current list */
+    reduceList();
   } else if (byte == 0x00) {
     /* end of block */
-    nodes[currentLevel]--; /* reduce current list (end of block) */
-    SML_TREELOG(currentLevel, "End of block %i\n", currentLevel);
+    reduceList();
+    SML_TREELOG(currentLevel, "End of block at level %i\n", currentLevel);
     if (currentLevel == 0) {
-      setState(SML_END, 4);
+      setState(SML_NEXT, 1);
     } else {
       setState(SML_BLOCKEND, 1);
     }
   } else if (byte >= 0x80 && byte <= 0x8F) {
     setState(SML_HDATA, (byte & 0x0F) << 4);
+  } else if (byte == 0x1B && currentLevel == 0) {
+    /* end sequence */
+    setState(SML_END, 3); 
   } else {
     /* Unexpected Byte */
-    SML_TREELOG(currentLevel, "UNEXPECTED char >%02X< at level %i\n", byte, nodes[currentLevel]);
+    SML_TREELOG(currentLevel, "UNEXPECTED magicbyte >%02X< at currentLevel %i\n", byte, currentLevel);
     setState(SML_UNEXPECTED, 4);
   }
 }
 
 sml_states_t smlState (unsigned char & currentByte) {
-  int size;
+  unsigned char size;
   if (len > 0) len--;
   crc16(currentByte);
   switch (currentState) {
@@ -137,11 +143,6 @@ sml_states_t smlState (unsigned char & currentByte) {
       }
     break;
     case SML_END:
-      if (currentByte == 0x00) {
-        /* some meters (EBZ?) continue with at least 2 more zero bytes */
-        setState(SML_END, 4);
-        break;
-      }
       if (currentByte != 0x1b) {
         SML_LOG("UNEXPECTED char >%02X< at SML_END\n", currentByte);
         setState(SML_UNEXPECTED, 4);
@@ -278,6 +279,3 @@ void smlOBISWh(double &wh) {
     i += listBuffer[i]+1;
   }
 }
-
-
-
