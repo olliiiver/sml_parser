@@ -1,3 +1,5 @@
+[![PlatformIO Registry](https://badges.registry.platformio.org/packages/olliiiver/library/SML%20Parser.svg)](https://registry.platformio.org/libraries/olliiiver/SML%20Parser)
+
 # Smart Message Language (SML) parser
 
 Easy to use C++ library with a low memory footprint to parse SML messages (based on BSI TR-03109-1) byte by byte from smart meters.
