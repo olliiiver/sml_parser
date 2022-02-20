@@ -270,9 +270,9 @@ void smlOBISWh(double &wh) {
         case 0xFC: wh = l / 10000; break;
         case 0xFB: wh = l / 100000; break;
         case 0xFA: wh = l / 1000000; break;
-        case 0x01: wh = l / 10; break;
-        case 0x02: wh = l / 100; break;
-        case 0x03: wh = l / 1000; break;
+        case 0x01: wh = l; break;
+        case 0x02: wh = l; break;
+        case 0x03: wh = l; break;
         default: wh = -3;
       }
     }
