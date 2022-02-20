@@ -211,6 +211,7 @@ The following sites provided a lot of helpful information to me.
 - https://wiki.volkszaehler.org/software/obis
 - https://wiki.volkszaehler.org/software/sml
 - https://www.stefan-weigert.de/php_loader/sml.php
+- https://github.com/devZer0/libsml-testing
 
 ## License
 
