@@ -32,6 +32,7 @@ void setup() {
 }
 
 void loop () {
+  char floatBuffer[20];
   unsigned int i = 0, iHandler = 0;
   unsigned char c;
   sml_states_t s;
@@ -58,12 +59,14 @@ void loop () {
       }
       if (s == SML_FINAL) {
         Serial.print(F("Power T1    (1-0:1.8.1)..: "));
-        Serial.print(T1Wh);
+        dtostrf(T1Wh, 10, 3, floatBuffer);
+        Serial.print(floatBuffer);
         Serial.print(F("\n"));
 
         Serial.print(F("Power T1+T2 (1-0:1.8.0)..: "));
-        Serial.print(SumWh);
-        Serial.print(F("\n\n"));
+        dtostrf(SumWh, 10, 3, floatBuffer);
+        Serial.print(floatBuffer);
+        Serial.print(F("\n\n\n\n"));
       }
     }
   }

@@ -28,6 +28,7 @@ static sml_states_t currentState = SML_START;
 static char nodes[MAX_TREE_SIZE];
 static unsigned char currentLevel = 0;
 static unsigned short crc = 0xFFFF;
+static char sc;
 static unsigned short crcMine = 0xFFFF;
 static unsigned short crcReceived = 0x0000;
 static unsigned char len = 4;
@@ -220,14 +221,25 @@ void smlOBISManufacturer(unsigned char * str, int maxSize) {
   }
 }
 
-void smlOBISWh(double &wh) {
+void pow(double &val, char &scaler) {
+  if( scaler < 0 ) {
+    while( scaler++ ) {
+      val /= 10;
+    }
+  }
+  else {
+    while( scaler-- ) {
+      val *= 10;
+    }
+  }
+}
+
+void smlOBISByUnit(long int & val, char & scaler, sml_units_t unit) {
   unsigned char i = 0, pos = 0, size = 0;
-  unsigned char scaler = 0;
-  wh = -1; /* unknown or error */
-  double l = 0;
+  val = -1; /* unknown or error */
   while (i < listPos) {
     pos++;
-    if (pos == 4 && listBuffer[i+1] != SML_WATT_HOUR) {
+    if (pos == 4 && listBuffer[i+1] != unit) {
       /* if unit at position 4 is not 0x1e (wh) return unknown */
       return;
     }
@@ -238,14 +250,14 @@ void smlOBISWh(double &wh) {
       size = (int)listBuffer[i];
       if (size == 4) {
         /* 32 bit */
-        l = (long int)listBuffer[i+1] << 24 
+        val = (long int)listBuffer[i+1] << 24 
           | (long int)listBuffer[i+2] << 16 
           | (long int)listBuffer[i+3] << 8 
           | listBuffer[i+4]; 
       }
       if (size == 5) {
         /* 40 bit */
-        l = (long long int)listBuffer[i+1] << 32 
+        val = (long long int)listBuffer[i+1] << 32 
           | (long int)listBuffer[i+2] << 24 
           | (long int)listBuffer[i+3] << 16 
           | (long int)listBuffer[i+4] << 8 
@@ -253,7 +265,7 @@ void smlOBISWh(double &wh) {
       }
       if (size == 8) {
         /* 56 bit */
-        l = 
+        val = 
           (long long int)listBuffer[i+1] << 56
           | (long long int)listBuffer[i+2] << 48 
           | (long long int)listBuffer[i+3] << 40 
@@ -263,19 +275,22 @@ void smlOBISWh(double &wh) {
           | (long int)listBuffer[i+7] << 8 
           | listBuffer[i+8];
       }
-      switch (scaler) {
-        case 0xFF: wh = l / 10; break;
-        case 0xFE: wh = l / 100; break;
-        case 0xFD: wh = l / 1000; break;
-        case 0xFC: wh = l / 10000; break;
-        case 0xFB: wh = l / 100000; break;
-        case 0xFA: wh = l / 1000000; break;
-        case 0x01: wh = l; break;
-        case 0x02: wh = l; break;
-        case 0x03: wh = l; break;
-        default: wh = -3;
-      }
     }
     i += listBuffer[i]+1;
   }
 }
+
+void smlOBISWh(double &wh) {
+  long int val;
+  smlOBISByUnit(val,  sc, SML_WATT_HOUR);
+  wh = val;
+  pow(wh, sc);
+}
+
+void smlOBISW(double &w) {
+  long int val;
+  smlOBISByUnit(val, sc, SML_WATT);
+  w = val;
+  pow(w, sc);
+}
+
