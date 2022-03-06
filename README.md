@@ -8,7 +8,18 @@ The library will control the last CRC value to check if the received data is cor
 
 Outside the library handlers can be registered to process received information.
 
-## Example and usage
+## Examples
+
+| Directory            | Description                                                    |
+| -------------------- | -------------------------------------------------------------- |
+| arduino              | Loops through static data and outputs debug messages to serial |
+| arduino_serial       | Reads data from Arduino Pin 8 and outputs debug to serial      |
+| esp32_lora           | Forward energy usage to LoraWAN (The Things Network)           |
+| esp32_m5stack_sender | Use m5stack to produce a message for testing                   |
+| esp32_receiver       | Receive messages and show infos on a display                   |
+| native               | Test library locally                                           |
+
+## Usage
 
 ```cpp
 void Manufacturer() {
