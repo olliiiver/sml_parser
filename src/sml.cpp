@@ -28,7 +28,7 @@ static sml_states_t currentState = SML_START;
 static char nodes[MAX_TREE_SIZE];
 static unsigned char currentLevel = 0;
 static unsigned short crc = 0xFFFF;
-static char sc;
+static signed char sc;
 static unsigned short crcMine = 0xFFFF;
 static unsigned short crcReceived = 0x0000;
 static unsigned char len = 4;
@@ -221,7 +221,7 @@ void smlOBISManufacturer(unsigned char * str, int maxSize) {
   }
 }
 
-void pow(double &val, char &scaler) {
+void pow(double &val, signed char &scaler) {
   if( scaler < 0 ) {
     while( scaler++ ) {
       val /= 10;
@@ -234,7 +234,7 @@ void pow(double &val, char &scaler) {
   }
 }
 
-void smlOBISByUnit(long int & val, char & scaler, sml_units_t unit) {
+void smlOBISByUnit(long int & val, signed char & scaler, sml_units_t unit) {
   unsigned char i = 0, pos = 0, size = 0;
   val = -1; /* unknown or error */
   while (i < listPos) {
