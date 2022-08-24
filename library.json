@@ -2,13 +2,11 @@
   "name": "SML Parser",
   "keywords": "SML, Smart Message Language, Parser, Smart Meter, OBIS",
   "description": "Library with a low memory foodprint to parse SML messages from smart meters",
-  "repository":
-  {
+  "repository": {
     "type": "git",
     "url": "https://github.com/olliiiver/sml_parser.git"
   },
-  "authors":
-  [
+  "authors": [
     {
       "name": "Olliiiver",
       "url": "https://github.com/olliiiver/",
