@@ -181,6 +181,7 @@ sml_states_t smlState(unsigned char &currentByte)
   case SML_FINAL:
   case SML_START:
     currentState = SML_START;
+    currentLevel = 0; // Reset current level at the begin of a new transmission to prevent problems
     if (currentByte != 0x1b)
       setState(SML_UNEXPECTED, 4);
     if (len == 0)
