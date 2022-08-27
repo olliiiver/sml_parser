@@ -1,4 +1,4 @@
-[![PlatformIO Registry](https://badges.registry.platformio.org/packages/olliiiver/library/SML%20Parser.svg)](https://registry.platformio.org/libraries/olliiiver/SML%20Parser)
+[![PlatformIO Registry](https://badges.registry.platformio.org/packages/olliiiver/library/SML%20Parser.svg)](https://registry.platformio.org/libraries/olliiiver/SML%20Parser) [![Test](https://github.com/olliiiver/sml_parser/workflows/Test/badge.svg)](https://github.com/olliiiver/sml_parser/actions)
 
 # Smart Message Language (SML) parser
 
