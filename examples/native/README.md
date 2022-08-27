@@ -1,12 +1,13 @@
-# Native
+# Native example
 
-Test library locally. Should work on OS X and Linux via `run.sh`
+Test the library on our local machine.
+
+Should simply work on OS X and Linux via `run.sh`
 
 ## Convert binary file
 
-Convert a binary file (ehz_bin.bin) into C include file:
+If you have a binary output from a meter available, you can convert it by using `xxd`:
 
 ```
 xxd --include ehz_bin.bin >ehz_bin.h
 ```
-

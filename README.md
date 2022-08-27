@@ -8,7 +8,7 @@ The library will control the last CRC value to check if the received data is cor
 
 Outside the library handlers can be registered to process received information.
 
-**The library seems to work with a lot of meters (Q3A, EHM, etc). If you experience any problems, feel free to submit a binary SML dump or a pull request. 😊**
+**The library seems to work with a lot of meters (Q3A, EMH, etc). If you experience any problems, feel free to submit a binary SML dump or a pull request. 😊**
 
 ## Examples
 
@@ -20,6 +20,8 @@ Outside the library handlers can be registered to process received information.
 | [esp32_m5stack_sender](examples/esp32_m5stack_sender/) | Use m5stack to produce a message for testing                   |
 | [esp32_receiver](examples/esp32_receiver/)             | Receive messages and show infos on a display                   |
 | [native](examples/native/)                             | Test library locally                                           |
+
+The easiest way to test the library would be over the [native](examples/native/) example.
 
 ## Usage
 
