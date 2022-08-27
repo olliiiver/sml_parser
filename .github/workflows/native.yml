@@ -56,4 +56,4 @@ jobs:
       - name: Publish package
         env:
           PLATFORMIO_AUTH_TOKEN: ${{ secrets.PIO_TOKEN }}
-        run: pio package publish
+        run: pio package publish  --non-interactive
