@@ -1,37 +1,38 @@
-#include <stdio.h>
-#include "sml.h"
 #include "ehz_bin.h"
+#include "sml.h"
 #include <Arduino.h>
+#include <stdio.h>
 
-// Continuously loops through a static message from RAM and outputs information to serial
+// Continuously loops through a static message from RAM and outputs information
+// to serial
 
 double T1Wh = -2, SumWh = -2;
 
 typedef struct {
   const unsigned char OBIS[6];
-  void (*Handler)(); 
+  void (*Handler)();
 } OBISHandler;
 
-void PowerT1() {
-  smlOBISWh(T1Wh);
-}
+void PowerT1() { smlOBISWh(T1Wh); }
 
-void PowerSum() {
-  smlOBISWh(SumWh);
-}
+void PowerSum() { smlOBISWh(SumWh); }
 
+// clang-format off
 OBISHandler OBISHandlers[] = {
   {{ 0x01, 0x00, 0x01, 0x08, 0x01, 0xff }, &PowerT1},      /*   1-  0:  1.  8.1*255 (T1) */
   {{ 0x01, 0x00, 0x01, 0x08, 0x00, 0xff }, &PowerSum},     /*   1-  0:  1.  8.0*255 (T1 + T2) */
   {{ 0, 0 }}
 };
+// clang-format on
 
-void setup() {
+void setup()
+{
   Serial.begin(9600);
   Serial.println(F("Starting"));
 }
 
-void loop () {
+void loop()
+{
   char floatBuffer[20];
   unsigned int i = 0, iHandler = 0;
   unsigned char c;
@@ -49,7 +50,8 @@ void loop () {
         /* check handlers on last received list */
         for (iHandler = 0; OBISHandlers[iHandler].Handler != 0 &&
                            !(smlOBISCheck(OBISHandlers[iHandler].OBIS));
-             iHandler++);
+             iHandler++)
+          ;
         if (OBISHandlers[iHandler].Handler != 0) {
           OBISHandlers[iHandler].Handler();
         }

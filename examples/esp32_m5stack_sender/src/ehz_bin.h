@@ -1,3 +1,4 @@
+// clang-format off
 // Formatted example data from https://github.com/devZer0/libsml-testing
 
 const unsigned char ehz_bin[] = {

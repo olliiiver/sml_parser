@@ -1,7 +1,7 @@
+#include "ehz_bin.h"
+#include "sml.h"
 #include <M5Stack.h>
 #include <SoftwareSerial.h>
-#include "sml.h"
-#include "ehz_bin.h"
 
 // M5Stack to produce some example data on TXD2 pin (blue grove connector)
 // Press button A to toggle between inverted/uninverted signal
@@ -45,24 +45,20 @@ void loop()
 {
   unsigned long currentMillis = millis();
   M5.update();
-  if (M5.BtnA.wasReleased())
-  {
+  if (M5.BtnA.wasReleased()) {
     invert = (invert) ? false : true;
     outSerial.begin(9600, SWSERIAL_8N1, -1, TXD2, invert, 0, 95);
     Serial.print("Button pressed.\n");
     updateDisplay();
   }
-  if (currentMillis - previousMillis >= interval)
-  {
+  if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
-    for (i = 0; i < ehz_bin_len; ++i)
-    {
+    for (i = 0; i < ehz_bin_len; ++i) {
       c = ehz_bin[i];
       s = smlState(c);
       outSerial.write(c);
       outSerial.flush();
-      if (s == SML_FINAL)
-      {
+      if (s == SML_FINAL) {
         counter++;
         updateDisplay();
       }
