@@ -4,20 +4,22 @@
 
 Easy to use C++ library with a low memory footprint to parse SML messages (based on BSI TR-03109-1) byte by byte from smart meters.
 
-The library will control the last CRC value to check if the received data is correct. On any error, the parser will reset and wait for valid data. This allows to start parsing at any time. For example, a half received message is discarded. 
+The library will control the last CRC value to check if the received data is correct. On any error, the parser will reset and wait for valid data. This allows to start parsing at any time. For example, a half received message is discarded.
 
 Outside the library handlers can be registered to process received information.
 
+**The library seems to work with a lot of meters (Q3A, EHM, etc). If you experience any problems, feel free to submit a binary SML dump or a pull request. 😊**
+
 ## Examples
 
-| Directory            | Description                                                    |
-| -------------------- | -------------------------------------------------------------- |
-| arduino              | Loops through static data and outputs debug messages to serial |
-| arduino_serial       | Reads data from Arduino Pin 8 and outputs debug to serial      |
-| esp32_lora           | Forward energy usage to LoraWAN (The Things Network)           |
-| esp32_m5stack_sender | Use m5stack to produce a message for testing                   |
-| esp32_receiver       | Receive messages and show infos on a display                   |
-| native               | Test library locally                                           |
+| Directory                                              | Description                                                    |
+| ------------------------------------------------------ | -------------------------------------------------------------- |
+| [arduino](examples/arduino/)                           | Loops through static data and outputs debug messages to serial |
+| [arduino_serial](examples/arduino_serial/)             | Reads data from Arduino Pin 8 and outputs debug to serial      |
+| [esp32_lora](examples/esp32_lora/)                     | Forward energy usage to LoraWAN (The Things Network)           |
+| [esp32_m5stack_sender](examples/esp32_m5stack_sender/) | Use m5stack to produce a message for testing                   |
+| [esp32_receiver](examples/esp32_receiver/)             | Receive messages and show infos on a display                   |
+| [native](examples/native/)                             | Test library locally                                           |
 
 ## Usage
 
@@ -42,7 +44,7 @@ SMLHandler SMLHandlers[] = {
 };
 
 int main () {
-  int i = 0, iHandler = 0; 
+  int i = 0, iHandler = 0;
   unsigned char c;
   sml_states_t s;
   for (i = 0; i < ehz_bin_len; ++i) {
@@ -54,10 +56,10 @@ int main () {
     }
     if (s == SML_LISTEND) {
       /* check handlers on last received list */
-      for (iHandler=0; SMLHandlers[iHandler].Handler != 0 && 
+      for (iHandler=0; SMLHandlers[iHandler].Handler != 0 &&
             !(smlOBISCheck(SMLHandlers[iHandler].OBIS)); iHandler++);
       if (SMLHandlers[iHandler].Handler != 0) {
-        SMLHandlers[iHandler].Handler(); 
+        SMLHandlers[iHandler].Handler();
       }
     }
     if (s == SML_UNEXPECTED) {
@@ -215,6 +217,7 @@ Calculated checksum: 1B70
 >>> Power T1    (1-0:1.8.1)..: 12345678.900 kWh
 >>> Power T1+T2 (1-0:1.8.0)..: 15141809.000 kWh
 ```
+
 ## Links
 
 The following sites provided a lot of helpful information to me.
@@ -227,5 +230,3 @@ The following sites provided a lot of helpful information to me.
 ## License
 
 GNU LGPL v2.1
-
-
