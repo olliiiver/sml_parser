@@ -118,24 +118,29 @@ sml_states_t smlState (unsigned char & currentByte) {
   unsigned char size;
   if (len > 0) len--;
   crc16(currentByte);
-  switch (currentState) {
-    case SML_UNEXPECTED:
-    case SML_CHECKSUM_ERROR:
-    case SML_FINAL:
-    case SML_START:
-      currentState = SML_START;
-      if (currentByte != 0x1b) setState(SML_UNEXPECTED, 4);
-      if (len == 0) {
-        SML_TREELOG(0, "START\n");
-        /* completely clean any garbage from crc checksum */
-        crc = 0xFFFF;
-        currentByte = 0x1b;
-        crc16(currentByte);
-        crc16(currentByte);
-        crc16(currentByte);
-        crc16(currentByte);
-        setState(SML_VERSION, 4);
-      }
+
+  switch (currentState)
+  {
+  case SML_UNEXPECTED:
+  case SML_CHECKSUM_ERROR:
+  case SML_FINAL:
+  case SML_START:
+    currentState = SML_START;
+    currentLevel = 0; // Reset current level at the begin of a new transmission to prevent problems
+    if (currentByte != 0x1b)
+      setState(SML_UNEXPECTED, 4);
+    if (len == 0)
+    {
+      SML_TREELOG(0, "START\n");
+      /* completely clean any garbage from crc checksum */
+      crc = 0xFFFF;
+      currentByte = 0x1b;
+      crc16(currentByte);
+      crc16(currentByte);
+      crc16(currentByte);
+      crc16(currentByte);
+      setState(SML_VERSION, 4);
+    }
     break;
     case SML_VERSION:
       if (currentByte != 0x01) setState(SML_UNEXPECTED, 4);
