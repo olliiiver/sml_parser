@@ -301,6 +301,12 @@ void smlOBISByUnit(long int &val, signed char &scaler, sml_units_t unit)
     }
     if (pos == 6) {
       size = (int)listBuffer[i];
+      if (size == 2) {
+        /* 16 bit - with sign extension for twos' complement values */
+        int16_t signedTwoByteValue =
+            (int16_t)listBuffer[i + 1] << 8 | listBuffer[i + 2];
+        val = (long int)signedTwoByteValue;
+      }
       if (size == 4) {
         /* 32 bit */
         val = (long int)listBuffer[i + 1] << 24 |
