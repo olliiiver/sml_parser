@@ -286,7 +286,7 @@ void pow(double &val, signed char &scaler)
   }
 }
 
-void smlOBISByUnit(long int &val, signed char &scaler, sml_units_t unit)
+void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
 {
   unsigned char i = 0, pos = 0, size = 0;
   val = -1; /* unknown or error */
@@ -303,26 +303,29 @@ void smlOBISByUnit(long int &val, signed char &scaler, sml_units_t unit)
       size = (int)listBuffer[i];
       if (size == 4) {
         /* 32 bit */
-        val = (long int)listBuffer[i + 1] << 24 |
-              (long int)listBuffer[i + 2] << 16 |
-              (long int)listBuffer[i + 3] << 8 | listBuffer[i + 4];
+        val = ((long long)listBuffer[i + 5] << 24) |
+              ((long long)listBuffer[i + 6] << 16) |
+              ((long long)listBuffer[i + 7] << 8) |
+              ((long long)listBuffer[i + 8] << 0);
       }
       if (size == 5) {
         /* 40 bit */
-        val = (long long int)listBuffer[i + 1] << 32 |
-              (long int)listBuffer[i + 2] << 24 |
-              (long int)listBuffer[i + 3] << 16 |
-              (long int)listBuffer[i + 4] << 8 | listBuffer[i + 5];
+        val = ((long long)listBuffer[i + 4] << 32) |
+              ((long long)listBuffer[i + 5] << 24) |
+              ((long long)listBuffer[i + 6] << 16) |
+              ((long long)listBuffer[i + 7] << 8) |
+              ((long long)listBuffer[i + 8] << 0);
       }
       if (size == 8) {
-        /* 56 bit */
-        val = (long long int)listBuffer[i + 1] << 56 |
-              (long long int)listBuffer[i + 2] << 48 |
-              (long long int)listBuffer[i + 3] << 40 |
-              (long long int)listBuffer[i + 4] << 32 |
-              (long int)listBuffer[i + 5] << 24 |
-              (long int)listBuffer[i + 6] << 16 |
-              (long int)listBuffer[i + 7] << 8 | listBuffer[i + 8];
+        /* 64 bit */
+        val = ((long long)listBuffer[i + 1] << 56) |
+              ((long long)listBuffer[i + 2] << 48) |
+              ((long long)listBuffer[i + 3] << 40) |
+              ((long long)listBuffer[i + 4] << 32) |
+              ((long long)listBuffer[i + 5] << 24) |
+              ((long long)listBuffer[i + 6] << 16) |
+              ((long long)listBuffer[i + 7] << 8) |
+              ((long long)listBuffer[i + 8] << 0);
       }
     }
     i += listBuffer[i] + 1;
@@ -331,7 +334,7 @@ void smlOBISByUnit(long int &val, signed char &scaler, sml_units_t unit)
 
 void smlOBISWh(double &wh)
 {
-  long int val;
+  long long int val;
   smlOBISByUnit(val, sc, SML_WATT_HOUR);
   wh = val;
   pow(wh, sc);
@@ -339,7 +342,7 @@ void smlOBISWh(double &wh)
 
 void smlOBISW(double &w)
 {
-  long int val;
+  long long int val;
   smlOBISByUnit(val, sc, SML_WATT);
   w = val;
   pow(w, sc);
