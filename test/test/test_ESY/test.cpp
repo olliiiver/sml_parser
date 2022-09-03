@@ -12,7 +12,7 @@ typedef struct {
 
 #define MAX_STR_MANUF 5
 unsigned char manuf[MAX_STR_MANUF];
-long int SumWh = -2;
+long long int SumWh = -2;
 bool isFinal = false;
 
 void Manufacturer() { smlOBISManufacturer(manuf, MAX_STR_MANUF); }
