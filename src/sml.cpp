@@ -288,7 +288,7 @@ void pow(double &val, signed char &scaler)
 
 void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
 {
-  unsigned char i = 0, pos = 0, size = 0;
+  unsigned char i = 0, pos = 0, size = 0, y = 0;
   val = -1; /* unknown or error */
   while (i < listPos) {
     pos++;
@@ -301,31 +301,13 @@ void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
     }
     if (pos == 6) {
       size = (int)listBuffer[i];
-      if (size == 4) {
-        /* 32 bit */
-        val = ((long long)listBuffer[i + 5] << 24) |
-              ((long long)listBuffer[i + 6] << 16) |
-              ((long long)listBuffer[i + 7] << 8) |
-              ((long long)listBuffer[i + 8] << 0);
-      }
-      if (size == 5) {
-        /* 40 bit */
-        val = ((long long)listBuffer[i + 4] << 32) |
-              ((long long)listBuffer[i + 5] << 24) |
-              ((long long)listBuffer[i + 6] << 16) |
-              ((long long)listBuffer[i + 7] << 8) |
-              ((long long)listBuffer[i + 8] << 0);
-      }
-      if (size == 8) {
-        /* 64 bit */
-        val = ((long long)listBuffer[i + 1] << 56) |
-              ((long long)listBuffer[i + 2] << 48) |
-              ((long long)listBuffer[i + 3] << 40) |
-              ((long long)listBuffer[i + 4] << 32) |
-              ((long long)listBuffer[i + 5] << 24) |
-              ((long long)listBuffer[i + 6] << 16) |
-              ((long long)listBuffer[i + 7] << 8) |
-              ((long long)listBuffer[i + 8] << 0);
+      val = 0;
+      for (y = 0; y < size; y++) {
+        // convert value
+        // SML_LOG("size = %i, pos = %i, bit = %i\n", size, y + 1,
+        //        (8 * (size - 1)) - (8 * y));
+        val |= (long long int)listBuffer[i + y + 1]
+               << ((8 * (size - 1)) - (8 * y));
       }
     }
     i += listBuffer[i] + 1;
