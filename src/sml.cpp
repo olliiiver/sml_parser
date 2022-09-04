@@ -329,3 +329,11 @@ void smlOBISW(double &w)
   w = val;
   pow(w, sc);
 }
+
+void smlOBISVolt(double &v)
+{
+  long long int val;
+  smlOBISByUnit(val, sc, SML_VOLT);
+  v = val;
+  pow(v, sc);
+}
