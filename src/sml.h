@@ -91,10 +91,11 @@ typedef enum {
 sml_states_t smlState(unsigned char &byte);
 bool smlOBISCheck(const unsigned char *obis);
 void smlOBISManufacturer(unsigned char *str, int maxSize);
-void smlOBISByUnit(long int &wh, signed char &scaler, sml_units_t unit);
+void smlOBISByUnit(long long int &wh, signed char &scaler, sml_units_t unit);
 
 // Be aware that double on Arduino UNO is just 32 bit
 void smlOBISWh(double &wh);
 void smlOBISW(double &w);
+void smlOBISVolt(double &v);
 
 #endif

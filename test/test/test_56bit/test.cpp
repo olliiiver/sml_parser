@@ -1,4 +1,4 @@
-#include "data_bin.h"
+#include "ehz_bin.h"
 #include "sml.h"
 #include "unity.h"
 #ifdef ARDUINO
@@ -12,21 +12,23 @@ typedef struct {
 
 #define MAX_STR_MANUF 5
 unsigned char manuf[MAX_STR_MANUF];
-long long int SumWh = -2;
+double SumWh = -2;
+long long int T1Wh = -2;
 bool isFinal = false;
 
 void Manufacturer() { smlOBISManufacturer(manuf, MAX_STR_MANUF); }
-
-void PowerSum()
+void PowerT1()
 {
-  // Double on Arduino UNO is just 32 bit, so we must test against long int
   signed char sc = 0;
-  smlOBISByUnit(SumWh, sc, SML_WATT_HOUR);
+  smlOBISByUnit(T1Wh, sc, SML_WATT_HOUR);
 }
+
+void PowerSum() { smlOBISWh(SumWh); }
 
 // clang-format off
 OBISHandler OBISHandlers[] = {
   {{ 0x81, 0x81, 0xc7, 0x82, 0x03, 0xff }, &Manufacturer}, /* 129-129:199.130.3*255 */
+  {{ 0x01, 0x00, 0x01, 0x08, 0x01, 0xff }, &PowerT1},      /*   1-  0:  1.  8.1*255 (T1) */
   {{ 0x01, 0x00, 0x01, 0x08, 0x00, 0xff }, &PowerSum},     /*   1-  0:  1.  8.0*255 (T1 + T2) */
   {{ 0, 0 }}
 };
@@ -40,13 +42,8 @@ void setUp(void)
   sml_states_t s;
   manuf[0] = 0;
 
-  for (i = 0; i < data_bin_len; ++i) {
-#ifdef ARDUINO
-    c = pgm_read_word_near(data_bin + i);
-#else
-    c = data_bin[i];
-#endif
-
+  for (i = 0; i < ehz_bin_len; ++i) {
+    c = ehz_bin[i];
     s = smlState(c);
     if (s == SML_LISTEND) {
       /* check handlers on last received list */
@@ -66,12 +63,17 @@ void setUp(void)
 
 void test_should_return_manufacturer(void)
 {
-  TEST_ASSERT_EQUAL_STRING("ESY", manuf);
+  TEST_ASSERT_EQUAL_STRING("EMH", manuf);
+}
+
+void test_should_return_t1_56bit(void)
+{
+  TEST_ASSERT_EQUAL_INT(72057594037927935, T1Wh);
 }
 
 void test_should_return_SumWh(void)
 {
-  TEST_ASSERT_EQUAL_INT(29416471626, SumWh);
+  TEST_ASSERT_EQUAL_DOUBLE(7238000, SumWh);
 }
 
 void test_should_be_final(void) { TEST_ASSERT_EQUAL_INT(1, isFinal); }
@@ -80,7 +82,7 @@ int runUnityTests(void)
 {
   UNITY_BEGIN();
   RUN_TEST(test_should_return_manufacturer);
-  //  RUN_TEST(test_should_return_t1);
+  RUN_TEST(test_should_return_t1_56bit);
   RUN_TEST(test_should_return_SumWh);
   RUN_TEST(test_should_be_final);
   return UNITY_END();

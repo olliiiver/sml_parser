@@ -31,7 +31,7 @@ jobs:
           platformio test -e native
   publish:
     needs: test
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.repository_owner == 'olliiiver'
     name: Publish Package
     runs-on: ubuntu-latest
     steps:
