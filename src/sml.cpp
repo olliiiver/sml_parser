@@ -286,6 +286,28 @@ void pow(double &val, signed char &scaler)
   }
 }
 
+bool isNegativeNumber(const long long int val, const unsigned char size)
+{
+  if (size == 0) {
+    return false;
+  }
+
+  const long long int msbPattern = (((long long int)0x80) << ((size - 1) * 8));
+  const long long int msb = val & msbPattern;
+  return msb != 0;
+}
+
+void extendSign(long long int &value, const unsigned char size)
+{
+  if (!isNegativeNumber(value, size)) {
+    return;
+  }
+
+  for (unsigned char i = size; i < sizeof(value); ++i) {
+    value |= ((long long int)0xff) << (i * 8);
+  }
+}
+
 void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
 {
   unsigned char i = 0, pos = 0, size = 0, y = 0;
@@ -309,6 +331,7 @@ void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
         val |= (long long int)listBuffer[i + y + 1]
                << ((8 * (size - 1)) - (8 * y));
       }
+      extendSign(val, size);
     }
     i += listBuffer[i] + 1;
   }
