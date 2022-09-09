@@ -51,8 +51,9 @@ static signed char sc;
 static unsigned short crcMine = 0xFFFF;
 static unsigned short crcReceived = 0x0000;
 static unsigned char len = 4;
-static unsigned char listBuffer[MAX_LIST_SIZE]; /* keeps a two dimensional list
-                                                   as length + data array */
+static unsigned char
+    listBuffer[MAX_LIST_SIZE]; /* keeps a two dimensional list
+                                  as length + state + data array */
 static unsigned char listPos = 0;
 
 void crc16(unsigned char &byte)
@@ -110,6 +111,7 @@ void checkMagicByte(unsigned char &byte)
       /* no data, get next */
       SML_TREELOG(currentLevel, " Data %i (empty)\n", nodes[currentLevel]);
       pushListBuffer(0);
+      pushListBuffer(currentState);
       if (nodes[currentLevel] == 1) {
         setState(SML_LISTEND, 1);
         SML_TREELOG(currentLevel, "LISTEND\n");
@@ -120,10 +122,24 @@ void checkMagicByte(unsigned char &byte)
     }
     else {
       size = (byte & 0x0F) - 1;
-      SML_TREELOG(currentLevel, " Data %i (length = %i): ", nodes[currentLevel],
-                  size);
-      pushListBuffer(size);
       setState(SML_DATA, size);
+      if ((byte & 0xF0) == 0x50) {
+        setState(SML_DATA_UNSIGNED_INT, size);
+      }
+      else if ((byte & 0xF0) == 0x60) {
+        setState(SML_DATA_SIGNED_INT, size);
+      }
+      else if ((byte & 0xF0) == 0x00) {
+        setState(SML_DATA_OCTET_STRING, size);
+      }
+      SML_TREELOG(currentLevel,
+                  "Data %i (length = %i%s): ", nodes[currentLevel], size,
+                  (currentState == SML_DATA_SIGNED_INT)     ? ", signed int"
+                  : (currentState == SML_DATA_UNSIGNED_INT) ? ", unsigned int"
+                  : (currentState == SML_DATA_OCTET_STRING) ? ", octet string"
+                                                            : "");
+      pushListBuffer(size);
+      pushListBuffer(currentState);
     }
     reduceList();
   }
@@ -139,6 +155,7 @@ void checkMagicByte(unsigned char &byte)
     }
   }
   else if (byte >= 0x80 && byte <= 0x8F) {
+    // MSB bit is set, another TL byte will follow
     setState(SML_HDATA, (byte & 0x0F) << 4);
   }
   else if (byte == 0x1B && currentLevel == 0) {
@@ -224,9 +241,13 @@ sml_states_t smlState(unsigned char &currentByte)
     size = len + currentByte - 1;
     setState(SML_DATA, size);
     pushListBuffer(size);
+    pushListBuffer(currentState);
     SML_TREELOG(currentLevel, " Data (length = %i): ", size);
     break;
   case SML_DATA:
+  case SML_DATA_SIGNED_INT:
+  case SML_DATA_UNSIGNED_INT:
+  case SML_DATA_OCTET_STRING:
     SML_LOG("%02X ", currentByte);
     pushListBuffer(currentByte);
     if (nodes[currentLevel] == 0 && len == 0) {
@@ -253,7 +274,7 @@ sml_states_t smlState(unsigned char &currentByte)
 
 bool smlOBISCheck(const unsigned char *obis)
 {
-  return (memcmp(obis, &listBuffer[1], 6) == 0);
+  return (memcmp(obis, &listBuffer[2], 6) == 0);
 }
 
 void smlOBISManufacturer(unsigned char *str, int maxSize)
@@ -261,6 +282,7 @@ void smlOBISManufacturer(unsigned char *str, int maxSize)
   int i = 0, pos = 0, size = 0;
   while (i < listPos) {
     size = (int)listBuffer[i];
+    i++;
     pos++;
     if (pos == 6) {
       /* get manufacturer at position 6 in list */
@@ -268,7 +290,7 @@ void smlOBISManufacturer(unsigned char *str, int maxSize)
       memcpy(str, &listBuffer[i + 1], size);
       str[size + 1] = 0;
     }
-    i += listBuffer[i] + 1;
+    i += size + 1;
   }
 }
 
@@ -288,29 +310,38 @@ void pow(double &val, signed char &scaler)
 
 void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
 {
-  unsigned char i = 0, pos = 0, size = 0, y = 0;
+  unsigned char i = 0, pos = 0, size = 0, y = 0, bit = 0;
+  sml_states_t type;
   val = -1; /* unknown or error */
   while (i < listPos) {
     pos++;
-    if (pos == 4 && listBuffer[i + 1] != unit) {
-      /* if unit at position 4 is not 0x1e (wh) return unknown */
+    size = (int)listBuffer[i++];
+    type = (sml_states_t)listBuffer[i++];
+    if (pos == 4 && listBuffer[i] != unit) {
+      /* return unknown (-1) if unit does not match */
       return;
     }
     if (pos == 5) {
-      scaler = listBuffer[i + 1];
+      scaler = listBuffer[i];
     }
     if (pos == 6) {
-      size = (int)listBuffer[i];
       val = 0;
       for (y = 0; y < size; y++) {
         // convert value
         // SML_LOG("size = %i, pos = %i, bit = %i\n", size, y + 1,
         //        (8 * (size - 1)) - (8 * y));
-        val |= (long long int)listBuffer[i + y + 1]
-               << ((8 * (size - 1)) - (8 * y));
+
+        // bitwise NOT for negative numbers
+        bit = (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7)))
+                  ? ~listBuffer[i + y]
+                  : listBuffer[i + y];
+        val |= (long long int)bit << ((8 * (size - 1)) - (8 * y));
+      }
+      if (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) {
+        val = -(val);
       }
     }
-    i += listBuffer[i] + 1;
+    i += size;
   }
 }
 
