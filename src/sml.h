@@ -18,7 +18,10 @@ typedef enum {
   SML_CHECKSUM,
   SML_CHECKSUM_ERROR, /* calculated checksum does not match */
   SML_UNEXPECTED,     /* unexpected byte received */
-  SML_FINAL           /* final state, checksum OK */
+  SML_FINAL,          /* final state, checksum OK */
+  SML_DATA_SIGNED_INT,
+  SML_DATA_UNSIGNED_INT,
+  SML_DATA_OCTET_STRING,
 } sml_states_t;
 
 typedef enum {
