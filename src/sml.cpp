@@ -340,7 +340,6 @@ void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
       if (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) {
         val = -(val);
       }
-      extendSign(val, size);
     }
     i += size;
   }
