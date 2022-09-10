@@ -51,9 +51,8 @@ static signed char sc;
 static unsigned short crcMine = 0xFFFF;
 static unsigned short crcReceived = 0x0000;
 static unsigned char len = 4;
-static unsigned char
-    listBuffer[MAX_LIST_SIZE]; /* keeps a two dimensional list
-                                  as length + state + data array */
+static unsigned char listBuffer[MAX_LIST_SIZE]; /* keeps a list
+                                                   as length + state + data  */
 static unsigned char listPos = 0;
 
 void crc16(unsigned char &byte)
@@ -310,7 +309,7 @@ void pow(double &val, signed char &scaler)
 
 void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
 {
-  unsigned char i = 0, pos = 0, size = 0, y = 0, bit = 0;
+  unsigned char i = 0, pos = 0, size = 0, y = 0;
   sml_states_t type;
   val = -1; /* unknown or error */
   while (i < listPos) {
@@ -326,19 +325,13 @@ void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
     }
     if (pos == 6) {
       val = 0;
-      for (y = 0; y < size; y++) {
-        // convert value
-        // SML_LOG("size = %i, pos = %i, bit = %i\n", size, y + 1,
-        //        (8 * (size - 1)) - (8 * y));
-
-        // bitwise NOT for negative numbers
-        bit = (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7)))
-                  ? ~listBuffer[i + y]
-                  : listBuffer[i + y];
-        val |= (long long int)bit << ((8 * (size - 1)) - (8 * y));
-      }
+      y = size;
       if (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) {
-        val = -(val);
+        // negative value
+        val = 0xFFFFFFFFFFFFFFFF;
+      }
+      for (y = 0; y < size; y++) {
+        val = (val << 8) | listBuffer[i + y];
       }
     }
     i += size;
