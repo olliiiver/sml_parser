@@ -324,13 +324,12 @@ void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
       scaler = listBuffer[i];
     }
     if (pos == 6) {
-      val = 0;
       y = size;
-      if (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) {
-        // negative value
-        val = 0xFFFFFFFFFFFFFFFF;
-      }
+      // initialize 64bit signed integer based on MSB from received value
+      val =
+          (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) ? ~0 : 0;
       for (y = 0; y < size; y++) {
+        // left shift received bytes to 64 bit signed integer
         val = (val << 8) | listBuffer[i + y];
       }
     }
