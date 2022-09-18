@@ -130,10 +130,10 @@ void checkMagicByte(unsigned char &byte)
       size = (byte & 0x0F) - 1;
       setState(SML_DATA, size);
       if ((byte & 0xF0) == 0x50) {
-        setState(SML_DATA_UNSIGNED_INT, size);
+        setState(SML_DATA_SIGNED_INT, size);
       }
       else if ((byte & 0xF0) == 0x60) {
-        setState(SML_DATA_SIGNED_INT, size);
+        setState(SML_DATA_UNSIGNED_INT, size);
       }
       else if ((byte & 0xF0) == 0x00) {
         setState(SML_DATA_OCTET_STRING, size);
