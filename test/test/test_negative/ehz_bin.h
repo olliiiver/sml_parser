@@ -57,7 +57,7 @@ const unsigned char ehz_bin[] = {
           /* 3. */                  0x01,
           /* 4. */                  0x62, 0x1e, 
           /* 5. */                  0x52, 0x00, 
-          /* 6. */                  0x63, 0xfe, 0xfb, 
+          /* 6. */                  0x53, 0xfe, 0xfb, 
           /* 7. */                  0x01, 
         /* 4. List (7) */         0x77, 
           /* 1. OBIS */             0x07, 0x01, 0x00, 0x01, 0x08, 0x01, 0xff, 
@@ -112,7 +112,10 @@ const unsigned char ehz_bin[] = {
     
     0x00, 
   0x1b, 0x1b, 0x1b, 0x1b,
-  0x1a, 0x01, 0x94, 0xe9
+  0x1a, 0x01, 0x61, 0x6b
+
 };
+
+
 const unsigned int ehz_bin_len = 306;
 

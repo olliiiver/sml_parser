@@ -60,7 +60,7 @@ void test_should_return_manufacturer(void)
   TEST_ASSERT_EQUAL_STRING("EMH", manuf);
 }
 
-void test_should_return_t1(void) { TEST_ASSERT_EQUAL_DOUBLE(-12, T1Wh); }
+void test_should_return_t1(void) { TEST_ASSERT_EQUAL_DOUBLE(244, T1Wh); }
 
 void test_should_return_SumWh(void) { TEST_ASSERT_EQUAL_DOUBLE(-261, SumWh); }
 
