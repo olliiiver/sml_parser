@@ -132,7 +132,7 @@ void checkMagicByte(unsigned char &byte)
         setState(SML_DATA_OCTET_STRING, size);
       }
       SML_TREELOG(currentLevel,
-                  "Data %i (length = %i%s): ", nodes[currentLevel], size,
+                  " Data %i (length = %i%s): ", nodes[currentLevel], size,
                   (currentState == SML_DATA_SIGNED_INT)     ? ", signed int"
                   : (currentState == SML_DATA_UNSIGNED_INT) ? ", unsigned int"
                   : (currentState == SML_DATA_OCTET_STRING) ? ", octet string"

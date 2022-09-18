@@ -84,102 +84,102 @@ If debug mode via `SML_DEBUG` (see examples/native/platformio.ini) is enabled, t
 ```
 START
  LISTSTART on level 1 with 6 nodes
- Data 6 (length = 6, octet string): 00 0C 04 08 87 2D
- Data 5 (length = 1, signed int): 00
- Data 4 (length = 1, signed int): 00
+  Data 6 (length = 6, octet string): 00 0C 04 08 87 2D
+  Data 5 (length = 1, unsigned int): 00
+  Data 4 (length = 1, unsigned int): 00
   LISTSTART on level 2 with 2 nodes
-  Data 2 (length = 2, signed int): 01 01
+   Data 2 (length = 2, unsigned int): 01 01
    LISTSTART on level 3 with 6 nodes
     Data 6 (empty)
     Data 5 (empty)
-   Data 4 (length = 6, octet string): 00 0C 06 9E 2D 0F
-   Data 3 (length = 10, octet string): 06 45 4D 48 01 00 1D 46 15 CA
+    Data 4 (length = 6, octet string): 00 0C 06 9E 2D 0F
+    Data 3 (length = 10, octet string): 06 45 4D 48 01 00 1D 46 15 CA
     Data 2 (empty)
     Data 1 (empty)
    LISTEND
    back to previous list
   back to previous list
- Data 2 (length = 2, signed int): 2B 8E
+  Data 2 (length = 2, unsigned int): 2B 8E
  End of block at level 1
  back to previous list
  LISTSTART on level 1 with 6 nodes
- Data 6 (length = 6, octet string): 00 0C 04 08 87 2E
- Data 5 (length = 1, signed int): 00
- Data 4 (length = 1, signed int): 00
+  Data 6 (length = 6, octet string): 00 0C 04 08 87 2E
+  Data 5 (length = 1, unsigned int): 00
+  Data 4 (length = 1, unsigned int): 00
   LISTSTART on level 2 with 2 nodes
-  Data 2 (length = 2, signed int): 07 01
+   Data 2 (length = 2, unsigned int): 07 01
    LISTSTART on level 3 with 7 nodes
     Data 7 (empty)
-   Data 6 (length = 10, octet string): 06 45 4D 48 01 00 1D 46 15 CA
+    Data 6 (length = 10, octet string): 06 45 4D 48 01 00 1D 46 15 CA
     Data 5 (empty)
     LISTSTART on level 4 with 2 nodes
-    Data 2 (length = 1, signed int): 01
-    Data 1 (length = 4, signed int): 06 9E FA 83
+     Data 2 (length = 1, unsigned int): 01
+     Data 1 (length = 4, unsigned int): 06 9E FA 83
     LISTEND on level 4
     back to previous list
     LISTSTART on level 4 with 7 nodes
      LISTSTART on level 5 with 7 nodes
-     Data 7 (length = 6, octet string): 81 81 C7 82 03 FF
+      Data 7 (length = 6, octet string): 81 81 C7 82 03 FF
       Data 6 (empty)
       Data 5 (empty)
       Data 4 (empty)
       Data 3 (empty)
-     Data 2 (length = 3, octet string): 45 4D 48
+      Data 2 (length = 3, octet string): 45 4D 48
       Data 1 (empty)
      LISTEND
      back to previous list
      LISTSTART on level 5 with 7 nodes
-     Data 7 (length = 6, octet string): 01 00 00 00 09 FF
+      Data 7 (length = 6, octet string): 01 00 00 00 09 FF
       Data 6 (empty)
       Data 5 (empty)
       Data 4 (empty)
       Data 3 (empty)
-     Data 2 (length = 10, octet string): 06 45 4D 48 01 00 1D 46 15 CA
+      Data 2 (length = 10, octet string): 06 45 4D 48 01 00 1D 46 15 CA
       Data 1 (empty)
      LISTEND
      back to previous list
      LISTSTART on level 5 with 7 nodes
-     Data 7 (length = 6, octet string): 01 00 01 08 00 FF
-     Data 6 (length = 2, signed int): 01 82
+      Data 7 (length = 6, octet string): 01 00 01 08 00 FF
+      Data 6 (length = 2, unsigned int): 01 82
       Data 5 (empty)
-     Data 4 (length = 1, signed int): 1E
-     Data 3 (length = 1, unsigned int): 03
-     Data 2 (length = 5, unsigned int): 00 00 00 1C 46
+      Data 4 (length = 1, unsigned int): 1E
+      Data 3 (length = 1, signed int): 03
+      Data 2 (length = 5, signed int): 00 00 00 1C 46
       Data 1 (empty)
      LISTEND
      back to previous list
      LISTSTART on level 5 with 7 nodes
-     Data 7 (length = 6, octet string): 01 00 01 08 01 FF
+      Data 7 (length = 6, octet string): 01 00 01 08 01 FF
       Data 6 (empty)
       Data 5 (empty)
-     Data 4 (length = 1, signed int): 1E
-     Data 3 (length = 1, unsigned int): FF
-     Data 2 (length = 8, unsigned int): 00 00 00 00 07 5B CD 15
+      Data 4 (length = 1, unsigned int): 1E
+      Data 3 (length = 1, signed int): FF
+      Data 2 (length = 8, signed int): 00 00 00 00 07 5B CD 15
       Data 1 (empty)
      LISTEND
      back to previous list
      LISTSTART on level 5 with 7 nodes
-     Data 7 (length = 6, octet string): 01 00 01 08 02 FF
+      Data 7 (length = 6, octet string): 01 00 01 08 02 FF
       Data 6 (empty)
       Data 5 (empty)
-     Data 4 (length = 1, signed int): 1E
-     Data 3 (length = 1, unsigned int): 03
-     Data 2 (length = 5, unsigned int): 00 00 00 1C 46
+      Data 4 (length = 1, unsigned int): 1E
+      Data 3 (length = 1, signed int): 03
+      Data 2 (length = 5, signed int): 00 00 00 1C 46
       Data 1 (empty)
      LISTEND
      back to previous list
      LISTSTART on level 5 with 7 nodes
-     Data 7 (length = 6, octet string): 01 00 0F 07 00 FF
+      Data 7 (length = 6, octet string): 01 00 0F 07 00 FF
       Data 6 (empty)
       Data 5 (empty)
-     Data 4 (length = 1, signed int): 1B
-     Data 3 (length = 1, unsigned int): FF
-     Data 2 (length = 4, unsigned int): 00 00 2F 65
+      Data 4 (length = 1, unsigned int): 1B
+      Data 3 (length = 1, signed int): FF
+      Data 2 (length = 4, signed int): 00 00 2F 65
       Data 1 (empty)
      LISTEND
      back to previous list
      LISTSTART on level 5 with 7 nodes
-     Data 7 (length = 6, octet string): 81 81 C7 82 05 FF
+      Data 7 (length = 6, octet string): 81 81 C7 82 05 FF
       Data 6 (empty)
       Data 5 (empty)
       Data 4 (empty)
@@ -191,23 +191,23 @@ START
      back to previous list
     back to previous list
     Data 2 (empty)
-   Data 1 (length = 2, signed int): B9 3F
+    Data 1 (length = 2, unsigned int): B9 3F
    LISTEND on level 3
    back to previous list
   back to previous list
  End of block at level 1
   LISTSTART on level 2 with 6 nodes
-  Data 6 (length = 6, octet string): 00 0C 04 08 87 31
-  Data 5 (length = 1, signed int): 00
-  Data 4 (length = 1, signed int): 00
+   Data 6 (length = 6, octet string): 00 0C 04 08 87 31
+   Data 5 (length = 1, unsigned int): 00
+   Data 4 (length = 1, unsigned int): 00
    LISTSTART on level 3 with 2 nodes
-   Data 2 (length = 2, signed int): 02 01
+    Data 2 (length = 2, unsigned int): 02 01
     LISTSTART on level 4 with 1 nodes
      Data 1 (empty)
     LISTEND
     back to previous list
    back to previous list
-  Data 2 (length = 2, signed int): 6A 53
+   Data 2 (length = 2, unsigned int): 6A 53
   End of block at level 2
   back to previous list
  back to previous list
@@ -216,8 +216,8 @@ Received checksum: C6E8
 Calculated checksum: C6E8
 >>> FINAL! Checksum OK
 >>> Manufacturer.............: EMH
->>> Power T1    (1-0:1.8.1)..: 12345678.900 kWh
->>> Power T1+T2 (1-0:1.8.0)..: 7238000.000 kWh
+>>> Power T1    (1-0:1.8.1)..: 12345678.900 Wh
+>>> Power T1+T2 (1-0:1.8.0)..: 7238000.000 Wh
 ```
 
 ## Links
