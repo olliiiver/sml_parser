@@ -91,7 +91,6 @@ void checkMagicByte(unsigned char &byte)
     /* go back in tree if no nodes remaining */
     SML_TREELOG(currentLevel, "back to previous list\n");
     currentLevel--;
-    listPos = 0;
   }
   if (byte > 0x70 && byte < 0x7F) {
     /* new list */
@@ -103,7 +102,15 @@ void checkMagicByte(unsigned char &byte)
     SML_TREELOG(currentLevel, "LISTSTART on level %i with %i nodes\n",
                 currentLevel, size);
     setState(SML_LISTSTART, size);
-    listPos = 0;
+    // @todo workaround for lists inside obis lists
+    if (size > 5) {
+      listPos = 0;
+      memset(listBuffer, '\0', MAX_LIST_SIZE);
+    }
+    else {
+      pushListBuffer(size);
+      pushListBuffer(currentState);
+    }
   }
   else if (byte >= 0x01 && byte <= 0x6F && nodes[currentLevel] > 0) {
     if (byte == 0x01) {
@@ -309,13 +316,24 @@ void pow(double &val, signed char &scaler)
 
 void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
 {
-  unsigned char i = 0, pos = 0, size = 0, y = 0;
+  unsigned char i = 0, pos = 0, size = 0, y = 0, skip = 0;
   sml_states_t type;
   val = -1; /* unknown or error */
   while (i < listPos) {
     pos++;
     size = (int)listBuffer[i++];
     type = (sml_states_t)listBuffer[i++];
+    if (type == SML_LISTSTART && size > 0) {
+      // skip a list inside an obis list
+      skip = size;
+      while (skip > 0) {
+        size = (int)listBuffer[i++];
+        type = (sml_states_t)listBuffer[i++];
+        i += size;
+        skip--;
+      }
+      size = 0;
+    }
     if (pos == 4 && listBuffer[i] != unit) {
       /* return unknown (-1) if unit does not match */
       return;
