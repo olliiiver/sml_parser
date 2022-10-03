@@ -56,8 +56,8 @@ int main()
     if (s == SML_FINAL) {
       printf(">>> FINAL! Checksum OK\n");
       printf(">>> Manufacturer.............: %s\n", manuf);
-      printf(">>> Power T1    (1-0:1.8.1)..: %.3f kWh\n", T1Wh);
-      printf(">>> Power T1+T2 (1-0:1.8.0)..: %.3f kWh\n\n", SumWh);
+      printf(">>> Power T1    (1-0:1.8.1)..: %.3f Wh\n", T1Wh);
+      printf(">>> Power T1+T2 (1-0:1.8.0)..: %.3f Wh\n\n", SumWh);
     }
   }
 }
