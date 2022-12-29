@@ -112,7 +112,7 @@ void checkMagicByte(unsigned char &byte)
     SML_TREELOG(currentLevel, "back to previous list\n");
     currentLevel--;
   }
-  if (byte > 0x70 && byte < 0x7F) {
+  if (byte > 0x70 && byte <= 0x7F) {
     /* new list */
     size = byte & 0x0F;
     smlNewList(size);
@@ -165,18 +165,25 @@ void checkMagicByte(unsigned char &byte)
       setState(SML_BLOCKEND, 1);
     }
   }
-  else if (byte >= 0x80 && byte <= 0x8F) {
+  else if (byte & 0x80) {
     // MSB bit is set, another TL byte will follow
-    setState(SML_HDATA, (byte & 0x0F) << 4);
+    if (byte >= 0x80 && byte <= 0x8F) {
+      // Datatype Octet String
+      setState(SML_HDATA, (byte & 0x0F) << 4);
+    }
+    else if (byte >= 0xF0 && byte <= 0xFF) {
+      /* Datatype List of ...*/
+      setState(SML_LISTEXTENDED, (byte & 0x0F) << 4);
+    }
   }
   else if (byte == 0x1B && currentLevel == 0) {
     /* end sequence */
     setState(SML_END, 3);
   }
-  else if (byte == 0xF1) {
-    /* extended list */
-    setState(SML_LISTEXTENDED, 1);
-  }
+  // else if (byte == 0xF1) {
+  //   /* extended list */
+  //   setState(SML_LISTEXTENDED, 1);
+  // }
   else {
     /* Unexpected Byte */
     SML_TREELOG(currentLevel,
@@ -260,7 +267,15 @@ sml_states_t smlState(unsigned char &currentByte)
     SML_TREELOG(currentLevel, " Data (length = %i): ", size);
     break;
   case SML_LISTEXTENDED:
-    smlNewList(currentByte + 16);
+    if ( (currentByte & 0x70) != 0x70 ) {
+      SML_LOG("Wrong following Byte for TL 'List of'\n");
+      setState(SML_UNEXPECTED, 4);
+    }
+    else {
+      size = len + (currentByte & 0x0F) - 1;
+      SML_LOG("Extended List with Size=%i\n", size);
+      smlNewList(size);
+    }
     break;
   case SML_DATA:
   case SML_DATA_SIGNED_INT:
@@ -389,4 +404,12 @@ void smlOBISVolt(double &v)
   smlOBISByUnit(val, sc, SML_VOLT);
   v = val;
   smlPow(v, sc);
+}
+
+void smlOBISAmpere(double &a)
+{
+  long long int val;
+  smlOBISByUnit(val, sc, SML_AMPERE);
+  a = val;
+  smlPow(a, sc);
 }
