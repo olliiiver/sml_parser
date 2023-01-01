@@ -180,10 +180,6 @@ void checkMagicByte(unsigned char &byte)
     /* end sequence */
     setState(SML_END, 3);
   }
-  // else if (byte == 0xF1) {
-  //   /* extended list */
-  //   setState(SML_LISTEXTENDED, 1);
-  // }
   else {
     /* Unexpected Byte */
     SML_TREELOG(currentLevel,
@@ -267,15 +263,9 @@ sml_states_t smlState(unsigned char &currentByte)
     SML_TREELOG(currentLevel, " Data (length = %i): ", size);
     break;
   case SML_LISTEXTENDED:
-    if ( (currentByte & 0x70) != 0x70 ) {
-      SML_LOG("Wrong following Byte for TL 'List of'\n");
-      setState(SML_UNEXPECTED, 4);
-    }
-    else {
-      size = len + (currentByte & 0x0F) - 1;
-      SML_LOG("Extended List with Size=%i\n", size);
-      smlNewList(size);
-    }
+    size = len + (currentByte & 0x0F);
+    SML_TREELOG(currentLevel, "Extended List with Size=%i\n", size);
+    smlNewList(size);
     break;
   case SML_DATA:
   case SML_DATA_SIGNED_INT:
