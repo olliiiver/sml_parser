@@ -101,5 +101,6 @@ void smlOBISByUnit(long long int &wh, signed char &scaler, sml_units_t unit);
 void smlOBISWh(double &wh);
 void smlOBISW(double &w);
 void smlOBISVolt(double &v);
+void smlOBISAmpere(double &a);
 
 #endif
