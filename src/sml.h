@@ -10,6 +10,7 @@ typedef enum {
   SML_NEXT,
   SML_LISTSTART,
   SML_LISTEND,
+  SML_LISTEXTENDED,
   SML_DATA,
   SML_HDATA,
   SML_DATAEND,
@@ -100,5 +101,6 @@ void smlOBISByUnit(long long int &wh, signed char &scaler, sml_units_t unit);
 void smlOBISWh(double &wh);
 void smlOBISW(double &w);
 void smlOBISVolt(double &v);
+void smlOBISAmpere(double &a);
 
 #endif
