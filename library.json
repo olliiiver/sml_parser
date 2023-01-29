@@ -1,7 +1,7 @@
 {
   "name": "SML Parser",
   "keywords": "SML, Smart Message Language, Parser, Smart Meter, OBIS",
-  "description": "Library with a low memory foodprint to parse SML messages from smart meters",
+  "description": "Universal library that can parse SML (Smart Message Language) messages from smart meters. It's designed to be lightweight and efficient and has a small memory footprint, making it suitable for use on embedded systems or other devices with limited memory resources.",
   "repository": {
     "type": "git",
     "url": "https://github.com/olliiiver/sml_parser.git"
@@ -14,7 +14,7 @@
     }
   ],
   "license": "LGPL-2.1-only",
-  "version": "0.26",
+  "version": "0.27",
   "frameworks": "*",
   "platforms": "*"
 }
