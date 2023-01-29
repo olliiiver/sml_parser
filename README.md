@@ -2,13 +2,11 @@
 
 # Smart Message Language (SML) parser
 
-Easy to use C++ library with a low memory footprint to parse SML messages (based on BSI TR-03109-1) byte by byte from smart meters.
+Easy to use C library with a low memory footprint to parse SML messages (based on BSI TR-03109-1) byte by byte from smart meters. It's designed to be lightweight and efficient and has a small memory footprint, making it suitable for use on embedded systems or other devices with limited memory resources.
 
-The library will control the last CRC value to check if the received data is correct. On any error, the parser will reset and wait for valid data. This allows to start parsing at any time. For example, a half received message is discarded.
+The library will control the last CRC value to check if the received data is correct. On any error, the parser will reset and wait for valid data. This allows to start parsing at any time. For example, a half received message is discarded. The library allows you to register handlers to process the received information. This feature allows you to easily process the data in your application without having to handle the low-level details of parsing the SML messages.
 
-Outside the library handlers can be registered to process received information.
-
-**The library seems to work with a lot of meters (Q3A, EMH, etc). If you experience any problems, feel free to submit a binary SML dump or a pull request. 😊**
+It's actively maintained and has already been used in various projects with meters from EMH, EFR, EasyMeter, etc.
 
 ## Examples
 
@@ -23,7 +21,7 @@ Outside the library handlers can be registered to process received information.
 
 The easiest way to test the library would be over the [native](examples/native/) example.
 
-## Usage
+## Example usage
 
 ```cpp
 void Manufacturer() {

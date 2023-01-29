@@ -2,161 +2,169 @@
 
 Reads data from Arduino Pin 8.
 
-Outputs some additional information if `SML_DEBUG` is enabled (see platformio.ini).
+Outputs some more information from the message if `SML_DEBUG` is enabled (see platformio.ini).
+
+Dumps a successfully received message as hex values which can be inserted into a .h file for testing.
 
 # Example output
 
 ```
 START
 LISTSTART on level 1 with 6 nodes
- Data 6 (length = 6): 00 19 03 77 8D E2
- Data 5 (length = 1): 00
- Data 4 (length = 1): 00
+ Data 6 (length = 6, octet string): 00 0C 04 08 87 2D
+ Data 5 (length = 1, unsigned int): 00
+ Data 4 (length = 1, unsigned int): 00
 LISTSTART on level 2 with 2 nodes
- Data 2 (length = 2): 01 01
+ Data 2 (length = 2, unsigned int): 01 01
 LISTSTART on level 3 with 6 nodes
  Data 6 (empty)
  Data 5 (empty)
- Data 4 (length = 6): 00 xx xx xx xx xx
- Data 3 (length = 10): xx xx xx xx xx 00 00 xx xx xx
+ Data 4 (length = 6, octet string): 00 0C 06 9E 2D 0F
+ Data 3 (length = 10, octet string): 06 45 4D 48 01 00 1D 46 15 CA
  Data 2 (empty)
  Data 1 (empty)
 LISTEND
 back to previous list
 back to previous list
- Data 2 (length = 2): 2F 90
+ Data 2 (length = 2, unsigned int): 2B 8E
 End of block at level 1
 back to previous list
 LISTSTART on level 1 with 6 nodes
- Data 6 (length = 6): 00 19 03 77 8D E3
- Data 5 (length = 1): 00
- Data 4 (length = 1): 00
+ Data 6 (length = 6, octet string): 00 0C 04 08 87 2E
+ Data 5 (length = 1, unsigned int): 00
+ Data 4 (length = 1, unsigned int): 00
 LISTSTART on level 2 with 2 nodes
- Data 2 (length = 2): 07 01
+ Data 2 (length = 2, unsigned int): 07 01
 LISTSTART on level 3 with 7 nodes
  Data 7 (empty)
- Data 6 (length = 10): 09 01 45 4D 48 00 00 xx xx xx
- Data 5 (length = 6): 01 00 62 0A FF FF
+ Data 6 (length = 10, octet string): 06 45 4D 48 01 00 1D 46 15 CA
+ Data 5 (empty)
 LISTSTART on level 4 with 2 nodes
- Data 2 (length = 1): 01
- Data 1 (length = 4): 08 20 1F A9
+ Data 2 (length = 1, unsigned int): 01
+ Data 1 (length = 4, unsigned int): 06 9E FA 83
 LISTEND on level 4
 back to previous list
-LISTSTART on level 4 with 9 nodes
+LISTSTART on level 4 with 7 nodes
 LISTSTART on level 5 with 7 nodes
- Data 7 (length = 6): 81 81 C7 82 03 FF
+ Data 7 (length = 6, octet string): 81 81 C7 82 03 FF
  Data 6 (empty)
  Data 5 (empty)
  Data 4 (empty)
  Data 3 (empty)
- Data 2 (length = 3): 45 4D 48
+ Data 2 (length = 3, octet string): 45 4D 48
  Data 1 (empty)
 LISTEND
 back to previous list
 LISTSTART on level 5 with 7 nodes
- Data 7 (length = 6): 01 00 00 00 09 FF
+ Data 7 (length = 6, octet string): 01 00 00 00 09 FF
  Data 6 (empty)
  Data 5 (empty)
  Data 4 (empty)
  Data 3 (empty)
- Data 2 (length = 10): 09 01 xx xx xx 00 00 xx xx xx
+ Data 2 (length = 10, octet string): 06 45 4D 48 01 00 1D 46 15 CA
  Data 1 (empty)
 LISTEND
 back to previous list
 LISTSTART on level 5 with 7 nodes
- Data 7 (length = 6): 01 00 01 08 00 FF
- Data 6 (length = 3): 01 01 82
+ Data 7 (length = 6, octet string): 01 00 01 08 00 FF
+ Data 6 (length = 2, unsigned int): 01 82
  Data 5 (empty)
- Data 4 (length = 1): 1E
- Data 3 (length = 1): 03
- Data 2 (length = 5): 00 00 00 5D 5D
+ Data 4 (length = 1, unsigned int): 1E
+ Data 3 (length = 1, signed int): FF
+ Data 2 (length = 5, signed int): 00 09 06 74 EA
  Data 1 (empty)
 LISTEND
 back to previous list
 LISTSTART on level 5 with 7 nodes
- Data 7 (length = 6): 01 00 02 08 00 FF
- Data 6 (length = 3): 01 01 82
- Data 5 (empty)
- Data 4 (length = 1): 1E
- Data 3 (length = 1): 03
- Data 2 (length = 5): 00 00 00 00 00
- Data 1 (empty)
-LISTEND
-back to previous list
-LISTSTART on level 5 with 7 nodes
- Data 7 (length = 6): 01 00 01 08 01 FF
+ Data 7 (length = 6, octet string): 01 00 01 08 01 FF
  Data 6 (empty)
  Data 5 (empty)
- Data 4 (length = 1): 1E
- Data 3 (length = 1): 03
- Data 2 (length = 5): 00 00 00 5D 5D
+ Data 4 (length = 1, unsigned int): 1E
+ Data 3 (length = 1, signed int): FF
+ Data 2 (length = 8, signed int): 00 00 00 00 07 5B CD 15
  Data 1 (empty)
 LISTEND
 back to previous list
 LISTSTART on level 5 with 7 nodes
- Data 7 (length = 6): 01 00 02 08 01 FF
+ Data 7 (length = 6, octet string): 01 00 01 08 02 FF
  Data 6 (empty)
  Data 5 (empty)
- Data 4 (length = 1): 1E
- Data 3 (length = 1): 03
- Data 2 (length = 5): 00 00 00 00 00
+ Data 4 (length = 1, unsigned int): 1E
+ Data 3 (length = 1, signed int): FF
+ Data 2 (length = 5, signed int): 00 00 00 00 00
  Data 1 (empty)
 LISTEND
 back to previous list
 LISTSTART on level 5 with 7 nodes
- Data 7 (length = 6): 01 00 01 08 02 FF
+ Data 7 (length = 6, octet string): 01 00 0F 07 00 FF
  Data 6 (empty)
  Data 5 (empty)
- Data 4 (length = 1): 1E
- Data 3 (length = 1): 03
- Data 2 (length = 5): 00 00 00 00 00
+ Data 4 (length = 1, unsigned int): 1B
+ Data 3 (length = 1, signed int): FF
+ Data 2 (length = 4, signed int): 00 00 2F 65
  Data 1 (empty)
 LISTEND
 back to previous list
 LISTSTART on level 5 with 7 nodes
- Data 7 (length = 6): 01 00 02 08 02 FF
- Data 6 (empty)
- Data 5 (empty)
- Data 4 (length = 1): 1E
- Data 3 (length = 1): 03
- Data 2 (length = 5): 00 00 00 00 00
- Data 1 (empty)
-LISTEND
-back to previous list
-LISTSTART on level 5 with 7 nodes
- Data 7 (length = 6): 81 81 C7 82 05 FF
+ Data 7 (length = 6, octet string): 81 81 C7 82 05 FF
  Data 6 (empty)
  Data 5 (empty)
  Data 4 (empty)
  Data 3 (empty)
- Data (length = 48): xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx
+ Data (length = 48): FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
  Data 2 (empty)
  Data 1 (empty)
 LISTEND
 back to previous list
 back to previous list
  Data 2 (empty)
- Data 1 (length = 2): 8B D3
+ Data 1 (length = 2, unsigned int): B9 3F
 LISTEND on level 3
 back to previous list
 back to previous list
 End of block at level 1
 LISTSTART on level 2 with 6 nodes
- Data 6 (length = 6): 00 19 03 77 8D E4
- Data 5 (length = 1): 00
- Data 4 (length = 1): 00
+ Data 6 (length = 6, octet string): 00 0C 04 08 87 31
+ Data 5 (length = 1, unsigned int): 00
+ Data 4 (length = 1, unsigned int): 00
 LISTSTART on level 3 with 2 nodes
- Data 2 (length = 2): 02 01
+ Data 2 (length = 2, unsigned int): 02 01
 LISTSTART on level 4 with 1 nodes
  Data 1 (empty)
 LISTEND
 back to previous list
 back to previous list
- Data 2 (length = 2): 58 75
+ Data 2 (length = 2, unsigned int): 6A 53
 End of block at level 2
 back to previous list
 back to previous list
-Received checksum: E0BE
-Calculated checksum: E0BE
+End of block at level 0
+Received checksum: 1B70
+Calculated checksum: 1B70
 >>> Successfully received a complete message!
+Size: 319
+---
+0x1B, 0x1B, 0x1B, 0x1B, 0x01, 0x01, 0x01, 0x01, 0x76, 0x07, 0x00, 0x0C, 0x04, 0x08, 0x87,
+0x2D, 0x62, 0x00, 0x62, 0x00, 0x72, 0x63, 0x01, 0x01, 0x76, 0x01, 0x01, 0x07, 0x00, 0x0C,
+0x06, 0x9E, 0x2D, 0x0F, 0x0B, 0x06, 0x45, 0x4D, 0x48, 0x01, 0x00, 0x1D, 0x46, 0x15, 0xCA,
+0x01, 0x01, 0x63, 0x2B, 0x8E, 0x00, 0x76, 0x07, 0x00, 0x0C, 0x04, 0x08, 0x87, 0x2E, 0x62,
+0x00, 0x62, 0x00, 0x72, 0x63, 0x07, 0x01, 0x77, 0x01, 0x0B, 0x06, 0x45, 0x4D, 0x48, 0x01,
+0x00, 0x1D, 0x46, 0x15, 0xCA, 0x01, 0x72, 0x62, 0x01, 0x65, 0x06, 0x9E, 0xFA, 0x83, 0x77,
+0x77, 0x07, 0x81, 0x81, 0xC7, 0x82, 0x03, 0xFF, 0x01, 0x01, 0x01, 0x01, 0x04, 0x45, 0x4D,
+0x48, 0x01, 0x77, 0x07, 0x01, 0x00, 0x00, 0x00, 0x09, 0xFF, 0x01, 0x01, 0x01, 0x01, 0x0B,
+0x06, 0x45, 0x4D, 0x48, 0x01, 0x00, 0x1D, 0x46, 0x15, 0xCA, 0x01, 0x77, 0x07, 0x01, 0x00,
+0x01, 0x08, 0x00, 0xFF, 0x63, 0x01, 0x82, 0x01, 0x62, 0x1E, 0x52, 0xFF, 0x56, 0x00, 0x09,
+0x06, 0x74, 0xEA, 0x01, 0x77, 0x07, 0x01, 0x00, 0x01, 0x08, 0x01, 0xFF, 0x01, 0x01, 0x62,
+0x1E, 0x52, 0xFF, 0x59, 0x00, 0x00, 0x00, 0x00, 0x07, 0x5B, 0xCD, 0x15, 0x01, 0x77, 0x07,
+0x01, 0x00, 0x01, 0x08, 0x02, 0xFF, 0x01, 0x01, 0x62, 0x1E, 0x52, 0xFF, 0x56, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x01, 0x77, 0x07, 0x01, 0x00, 0x0F, 0x07, 0x00, 0xFF, 0x01, 0x01, 0x62,
+0x1B, 0x52, 0xFF, 0x55, 0x00, 0x00, 0x2F, 0x65, 0x01, 0x77, 0x07, 0x81, 0x81, 0xC7, 0x82,
+0x05, 0xFF, 0x01, 0x01, 0x01, 0x01, 0x83, 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x01, 0x01, 0x63,
+0xB9, 0x3F, 0x00, 0x76, 0x07, 0x00, 0x0C, 0x04, 0x08, 0x87, 0x31, 0x62, 0x00, 0x62, 0x00,
+0x72, 0x63, 0x02, 0x01, 0x71, 0x01, 0x63, 0x6A, 0x53, 0x00, 0x00, 0x1B, 0x1B, 0x1B, 0x1B,
+0x1A, 0x01, 0x70, 0x1B
+---
 ```

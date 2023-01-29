@@ -84,6 +84,26 @@ void reduceList()
     nodes[currentLevel]--;
 }
 
+void smlNewList(unsigned char size)
+{
+  reduceList();
+  if (currentLevel < MAX_TREE_SIZE)
+    currentLevel++;
+  nodes[currentLevel] = size;
+  SML_TREELOG(currentLevel, "LISTSTART on level %i with %i nodes\n",
+              currentLevel, size);
+  setState(SML_LISTSTART, size);
+  // @todo workaround for lists inside obis lists
+  if (size > 5) {
+    listPos = 0;
+    memset(listBuffer, '\0', MAX_LIST_SIZE);
+  }
+  else {
+    pushListBuffer(size);
+    pushListBuffer(currentState);
+  }
+}
+
 void checkMagicByte(unsigned char &byte)
 {
   unsigned int size = 0;
@@ -92,25 +112,10 @@ void checkMagicByte(unsigned char &byte)
     SML_TREELOG(currentLevel, "back to previous list\n");
     currentLevel--;
   }
-  if (byte > 0x70 && byte < 0x7F) {
+  if (byte > 0x70 && byte <= 0x7F) {
     /* new list */
     size = byte & 0x0F;
-    reduceList();
-    if (currentLevel < MAX_TREE_SIZE)
-      currentLevel++;
-    nodes[currentLevel] = size;
-    SML_TREELOG(currentLevel, "LISTSTART on level %i with %i nodes\n",
-                currentLevel, size);
-    setState(SML_LISTSTART, size);
-    // @todo workaround for lists inside obis lists
-    if (size > 5) {
-      listPos = 0;
-      memset(listBuffer, '\0', MAX_LIST_SIZE);
-    }
-    else {
-      pushListBuffer(size);
-      pushListBuffer(currentState);
-    }
+    smlNewList(size);
   }
   else if (byte >= 0x01 && byte <= 0x6F && nodes[currentLevel] > 0) {
     if (byte == 0x01) {
@@ -160,9 +165,16 @@ void checkMagicByte(unsigned char &byte)
       setState(SML_BLOCKEND, 1);
     }
   }
-  else if (byte >= 0x80 && byte <= 0x8F) {
+  else if (byte & 0x80) {
     // MSB bit is set, another TL byte will follow
-    setState(SML_HDATA, (byte & 0x0F) << 4);
+    if (byte >= 0x80 && byte <= 0x8F) {
+      // Datatype Octet String
+      setState(SML_HDATA, (byte & 0x0F) << 4);
+    }
+    else if (byte >= 0xF0 && byte <= 0xFF) {
+      /* Datatype List of ...*/
+      setState(SML_LISTEXTENDED, (byte & 0x0F) << 4);
+    }
   }
   else if (byte == 0x1B && currentLevel == 0) {
     /* end sequence */
@@ -249,6 +261,11 @@ sml_states_t smlState(unsigned char &currentByte)
     pushListBuffer(size);
     pushListBuffer(currentState);
     SML_TREELOG(currentLevel, " Data (length = %i): ", size);
+    break;
+  case SML_LISTEXTENDED:
+    size = len + (currentByte & 0x0F);
+    SML_TREELOG(currentLevel, "Extended List with Size=%i\n", size);
+    smlNewList(size);
     break;
   case SML_DATA:
   case SML_DATA_SIGNED_INT:
@@ -377,4 +394,12 @@ void smlOBISVolt(double &v)
   smlOBISByUnit(val, sc, SML_VOLT);
   v = val;
   smlPow(v, sc);
+}
+
+void smlOBISAmpere(double &a)
+{
+  long long int val;
+  smlOBISByUnit(val, sc, SML_AMPERE);
+  a = val;
+  smlPow(a, sc);
 }
