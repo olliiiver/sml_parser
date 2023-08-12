@@ -403,3 +403,19 @@ void smlOBISAmpere(double &a)
   a = val;
   smlPow(a, sc);
 }
+
+void smlOBISHertz(double &h)
+{
+  long long int val;
+  smlOBISByUnit(val, sc, SML_HERTZ);
+  h = val;
+  smlPow(h, sc);
+}
+
+void smlOBISDegree(double &d)
+{
+  long long int val;
+  smlOBISByUnit(val, sc, SML_DEGREE);
+  d = val;
+  smlPow(d, sc);
+}
