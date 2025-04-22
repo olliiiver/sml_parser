@@ -5,7 +5,6 @@
 #include "smlCrcTable.h"
 
 #ifdef SML_DEBUG
-char logBuff[200];
 
 #ifdef SML_NATIVE
 #define SML_LOG(...)                                                           \
@@ -40,22 +39,29 @@ char logBuff[200];
   } while (0)
 #endif
 
-#define MAX_LIST_SIZE 80
-#define MAX_TREE_SIZE 10
+// Define a single static instance to maintain operation of legacy C style global functions
+// (e.g. see non-member functions smlState, smlOBISCheck, etc.)
+SmlParser SmlParser1;
 
-static sml_states_t currentState = SML_START;
-static char nodes[MAX_TREE_SIZE];
-static unsigned char currentLevel = 0;
-static unsigned short crc = 0xFFFF;
-static signed char sc;
-static unsigned short crcMine = 0xFFFF;
-static unsigned short crcReceived = 0x0000;
-static unsigned char len = 4;
-static unsigned char listBuffer[MAX_LIST_SIZE]; /* keeps a list
-                                                   as length + state + data  */
-static unsigned char listPos = 0;
 
-void crc16(unsigned char &byte)
+SmlParser::SmlParser()
+{
+   reset();
+}
+
+void SmlParser::reset()
+{
+   currentState = SML_START;
+   nodes[0] = 0;
+   currentLevel = 0;
+   crc = 0xFFFF;
+   crcMine = 0xFFFF;
+   crcReceived = 0x0000;
+   len = 4;
+   listPos = 0;
+}
+
+void SmlParser::crc16(unsigned char &byte)
 {
 #ifdef ARDUINO
   crc =
@@ -65,26 +71,26 @@ void crc16(unsigned char &byte)
 #endif
 }
 
-void setState(sml_states_t state, int byteLen)
+void SmlParser::setState(sml_states_t state, int byteLen)
 {
   currentState = state;
   len = byteLen;
 }
 
-void pushListBuffer(unsigned char byte)
+void SmlParser::pushListBuffer(unsigned char byte)
 {
   if (listPos < MAX_LIST_SIZE) {
     listBuffer[listPos++] = byte;
   }
 }
 
-void reduceList()
+void SmlParser::reduceList()
 {
   if (currentLevel >= 0 && nodes[currentLevel] > 0)
     nodes[currentLevel]--;
 }
 
-void smlNewList(unsigned char size)
+void SmlParser::smlNewList(unsigned char size)
 {
   reduceList();
   if (currentLevel < MAX_TREE_SIZE)
@@ -104,7 +110,7 @@ void smlNewList(unsigned char size)
   }
 }
 
-void checkMagicByte(unsigned char &byte)
+void SmlParser::checkMagicByte(unsigned char &byte)
 {
   unsigned int size = 0;
   while (currentLevel > 0 && nodes[currentLevel] == 0) {
@@ -190,6 +196,11 @@ void checkMagicByte(unsigned char &byte)
 }
 
 sml_states_t smlState(unsigned char &currentByte)
+{
+  return SmlParser1.smlState(currentByte);
+}
+
+sml_states_t SmlParser::smlState(unsigned char &currentByte)
 {
   unsigned char size;
   if (len > 0)
@@ -297,10 +308,20 @@ sml_states_t smlState(unsigned char &currentByte)
 
 bool smlOBISCheck(const unsigned char *obis)
 {
+  return SmlParser1.smlOBISCheck(obis);
+}
+
+bool SmlParser::smlOBISCheck(const unsigned char *obis)
+{
   return (memcmp(obis, &listBuffer[2], 6) == 0);
 }
 
 void smlOBISManufacturer(unsigned char *str, int maxSize)
+{
+  SmlParser1.smlOBISManufacturer(str, maxSize);
+}
+
+void SmlParser::smlOBISManufacturer(unsigned char *str, int maxSize)
 {
   int i = 0, pos = 0, size = 0;
   while (i < listPos) {
@@ -312,9 +333,33 @@ void smlOBISManufacturer(unsigned char *str, int maxSize)
       size = (size > maxSize - 1) ? maxSize : size;
       memcpy(str, &listBuffer[i + 1], size);
       str[size + 1] = 0;
+      break;
     }
     i += size + 1;
   }
+}
+
+int smlOBISServerId(unsigned char* bytes, int maxSize)
+{
+  return SmlParser1.smlOBISServerId(bytes, maxSize);
+}
+
+int SmlParser::smlOBISServerId(unsigned char* bytes, int maxSize)
+{
+    int i = 0, pos = 0, size = 0;
+    while (i < listPos) {
+        size = (int)listBuffer[i];
+        i++;
+        pos++;
+        if (pos == 6) {
+            /* get serverId at position 6 in list */
+            size = (size > maxSize) ? maxSize : size;
+            memcpy(bytes, &listBuffer[i + 1], size);
+            return size;
+        }
+        i += size + 1;
+    }
+    return 0;
 }
 
 void smlPow(double &val, signed char &scaler)
@@ -332,6 +377,11 @@ void smlPow(double &val, signed char &scaler)
 }
 
 void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
+{
+  SmlParser1.smlOBISByUnit(val, scaler, unit);
+}
+
+void SmlParser::smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
 {
   unsigned char i = 0, pos = 0, size = 0, y = 0, skip = 0;
   sml_states_t type;
@@ -374,6 +424,11 @@ void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
 
 void smlOBISWh(double &wh)
 {
+  SmlParser1.smlOBISWh(wh);
+}
+
+void SmlParser::smlOBISWh(double &wh)
+{
   long long int val;
   smlOBISByUnit(val, sc, SML_WATT_HOUR);
   wh = val;
@@ -381,6 +436,11 @@ void smlOBISWh(double &wh)
 }
 
 void smlOBISW(double &w)
+{
+  SmlParser1.smlOBISW(w);
+}
+
+void SmlParser::smlOBISW(double &w)
 {
   long long int val;
   smlOBISByUnit(val, sc, SML_WATT);
@@ -390,6 +450,11 @@ void smlOBISW(double &w)
 
 void smlOBISVolt(double &v)
 {
+  SmlParser1.smlOBISVolt(v);
+}
+
+void SmlParser::smlOBISVolt(double &v)
+{
   long long int val;
   smlOBISByUnit(val, sc, SML_VOLT);
   v = val;
@@ -397,6 +462,11 @@ void smlOBISVolt(double &v)
 }
 
 void smlOBISAmpere(double &a)
+{
+  SmlParser1.smlOBISAmpere(a);
+}
+
+void SmlParser::smlOBISAmpere(double &a)
 {
   long long int val;
   smlOBISByUnit(val, sc, SML_AMPERE);
@@ -406,6 +476,11 @@ void smlOBISAmpere(double &a)
 
 void smlOBISHertz(double &h)
 {
+  SmlParser1.smlOBISHertz(h);
+}
+
+void SmlParser::smlOBISHertz(double &h)
+{
   long long int val;
   smlOBISByUnit(val, sc, SML_HERTZ);
   h = val;
@@ -413,6 +488,11 @@ void smlOBISHertz(double &h)
 }
 
 void smlOBISDegree(double &d)
+{
+  SmlParser1.smlOBISDegree(d);
+}
+
+void SmlParser::smlOBISDegree(double &d)
 {
   long long int val;
   smlOBISByUnit(val, sc, SML_DEGREE);
