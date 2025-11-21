@@ -367,6 +367,7 @@ void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
         // left shift received bytes to 64 bit signed integer
         val = (val << 8) | listBuffer[i + y];
       }
+      return;
     }
     i += size;
   }

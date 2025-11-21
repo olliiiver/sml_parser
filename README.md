@@ -8,6 +8,8 @@ The library will control the last CRC value to check if the received data is cor
 
 It's actively maintained and has already been used in various projects with meters from EMH, EFR, EasyMeter, etc.
 
+The API is described in [`sml.h`](src/sml.h) via doxygen comments.
+
 ## Examples
 
 | Directory                                              | Description                                                    |
