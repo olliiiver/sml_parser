@@ -12,16 +12,21 @@ typedef struct {
 
 #define MAX_STR_MANUF 5
 unsigned char manuf[MAX_STR_MANUF];
+#define MAX_LEN_SERVERID 10
+int serverIdLength = 0;
+unsigned char serverId[MAX_LEN_SERVERID];
 double T1Wh = -2, SumWh = -2;
 bool isFinal = false;
 
 void Manufacturer() { smlOBISManufacturer(manuf, MAX_STR_MANUF); }
+void ServerId() { serverIdLength = smlOBISServerId(serverId, MAX_LEN_SERVERID); }
 void PowerT1() { smlOBISWh(T1Wh); }
 void PowerSum() { smlOBISWh(SumWh); }
 
 // clang-format off
 OBISHandler OBISHandlers[] = {
   {{ 0x81, 0x81, 0xc7, 0x82, 0x03, 0xff }, &Manufacturer}, /* 129-129:199.130.3*255 */
+  {{ 0x01, 0x00, 0x00, 0x00, 0x09, 0xff }, &ServerId}, // 1-0: 0.0.9 * 255
   {{ 0x01, 0x00, 0x01, 0x08, 0x01, 0xff }, &PowerT1},      /*   1-  0:  1.  8.1*255 (T1) */
   {{ 0x01, 0x00, 0x01, 0x08, 0x00, 0xff }, &PowerSum},     /*   1-  0:  1.  8.0*255 (T1 + T2) */
   {{ 0, 0 }}
@@ -35,6 +40,7 @@ void setUp(void)
   unsigned char c;
   sml_states_t s;
   manuf[0] = 0;
+  serverIdLength = 0;
 
   for (i = 0; i < ehz_bin_len; ++i) {
     c = ehz_bin[i];
@@ -55,9 +61,19 @@ void setUp(void)
   }
 }
 
+void tearDown(void) {
+    // intentionally left blank, needed for native hosting in Windows (fixes unity.c undefined reference to 'tearDown')
+}
+
 void test_should_return_manufacturer(void)
 {
   TEST_ASSERT_EQUAL_STRING("EMH", manuf);
+}
+
+void test_should_return_serverId(void)
+{
+  static const unsigned char expectedServerId[]={ 0x06, 0x45, 0x4D, 0x48, 0x01, 0x00, 0x1D, 0x46, 0x15, 0xCA };
+  TEST_ASSERT_EQUAL_MEMORY(expectedServerId, serverId, serverIdLength);
 }
 
 void test_should_return_t1(void) { TEST_ASSERT_EQUAL_DOUBLE(244, T1Wh); }
@@ -70,6 +86,7 @@ int runUnityTests(void)
 {
   UNITY_BEGIN();
   RUN_TEST(test_should_return_manufacturer);
+  RUN_TEST(test_should_return_serverId);
   RUN_TEST(test_should_return_t1);
   RUN_TEST(test_should_return_SumWh);
   RUN_TEST(test_should_be_final);
