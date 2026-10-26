@@ -326,15 +326,17 @@ void smlOBISManufacturer(unsigned char *str, int maxSize)
 void SmlParser::smlOBISManufacturer(unsigned char *str, int maxSize)
 {
   int i = 0, pos = 0, size = 0;
+  if (maxSize < 1) return;
   while (i < listPos) {
     size = (int)listBuffer[i];
     i++;
     pos++;
     if (pos == 6) {
       /* get manufacturer at position 6 in list */
-      size = (size > maxSize - 1) ? maxSize : size;
+      if (size > maxSize - 1) size = maxSize - 1; /* leave room for the terminator */
+      if (i + 1 + size > listPos) size = (i + 1 < listPos) ? (listPos - (i + 1)) : 0; /* stay in buffer */
       memcpy(str, &listBuffer[i + 1], size);
-      str[size + 1] = 0;
+      str[size] = 0;
       break;
     }
     i += size + 1;
@@ -355,7 +357,8 @@ int SmlParser::smlOBISServerId(unsigned char* bytes, int maxSize)
         pos++;
         if (pos == 6) {
             /* get serverId at position 6 in list */
-            size = (size > maxSize) ? maxSize : size;
+            if (size > maxSize) size = (maxSize > 0) ? maxSize : 0;
+            if (i + 1 + size > listPos) size = (i + 1 < listPos) ? (listPos - (i + 1)) : 0; /* stay in buffer */
             memcpy(bytes, &listBuffer[i + 1], size);
             return size;
         }
@@ -390,27 +393,35 @@ void SmlParser::smlOBISByUnit(long long int &val, signed char &scaler, sml_units
   val = -1; /* unknown or error */
   while (i < listPos) {
     pos++;
+    if (i + 2 > listPos) return; /* need the size and type bytes */
     size = (int)listBuffer[i++];
     type = (sml_states_t)listBuffer[i++];
     if (type == SML_LISTSTART && size > 0) {
       // skip a list inside an obis list
       skip = size;
       while (skip > 0) {
+        if (i + 2 > listPos) return;
         size = (int)listBuffer[i++];
         type = (sml_states_t)listBuffer[i++];
+        if (i + size > listPos) return; /* do not skip past the buffer */
         i += size;
         skip--;
       }
       size = 0;
     }
-    if (pos == 4 && listBuffer[i] != unit) {
-      /* return unknown (-1) if unit does not match */
-      return;
+    if (pos == 4) {
+      if (i >= listPos) return;
+      if (listBuffer[i] != unit) {
+        /* return unknown (-1) if unit does not match */
+        return;
+      }
     }
     if (pos == 5) {
+      if (i >= listPos) return;
       scaler = listBuffer[i];
     }
     if (pos == 6) {
+      if (size < 1 || i + size > listPos) return; /* value must fit in the buffer */
       y = size;
       // initialize 64bit signed integer based on MSB from received value
       val =
@@ -419,7 +430,9 @@ void SmlParser::smlOBISByUnit(long long int &val, signed char &scaler, sml_units
         // left shift received bytes to 64 bit signed integer
         val = (val << 8) | listBuffer[i + y];
       }
+      return;
     }
+    if (i + size > listPos) return; /* next entry must stay in the buffer */
     i += size;
   }
 }
