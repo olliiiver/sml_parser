@@ -20,6 +20,7 @@ The API is described in [`sml.h`](src/sml.h) via doxygen comments.
 | [esp32_m5stack_sender](examples/esp32_m5stack_sender/) | Use m5stack to produce a message for testing                   |
 | [esp32_receiver](examples/esp32_receiver/)             | Receive messages and show infos on a display                   |
 | [native](examples/native/)                             | Test library locally                                           |
+| [native_entries](examples/native_entries/)             | Print all values and watch OBIS codes configured as strings    |
 
 The easiest way to test the library would be over the [native](examples/native/) example.
 
@@ -76,6 +77,28 @@ int main () {
   }
 }
 ```
+
+## Reading all values
+
+If the OBIS codes of a meter are not known in advance (e.g. to show the user
+which values a meter sends, or to configure handlers at runtime), use
+`smlOBISEntry` after each `SML_LISTEND`. It returns OBIS code, unit, scaler and
+value of every entry. `smlOBISToString` and `smlOBISFromString` convert OBIS
+codes from and to the `A-B:C.D.E*F` notation.
+
+```cpp
+sml_obis_entry_t entry;
+char obis[24];
+
+if (s == SML_LISTEND && smlOBISEntry(entry)) {
+  smlOBISToString(entry.obis, obis, sizeof(obis));
+  if (entry.type == SML_DATA_SIGNED_INT || entry.type == SML_DATA_UNSIGNED_INT) {
+    printf("%s: %.3f (unit %d)\n", obis, entry.value * pow(10, entry.scaler), entry.unit);
+  }
+}
+```
+
+See the [native_entries](examples/native_entries/) example.
 
 ## Debug mode
 

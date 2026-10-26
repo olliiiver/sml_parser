@@ -6,6 +6,7 @@
  *  - at least one message was received with a valid checksum
  *  - no checksum errors occurred
  *  - 1-0:1.8.0*255 provides a value
+ *  - smlOBISEntry returns the same 1-0:1.8.0*255 value as smlOBISWh
  *
  * Known deviations of a dump can be relaxed with the options:
  *  --allow-crc-errors  dump contains messages with invalid checksums
@@ -50,9 +51,10 @@ int main(int argc, char *argv[])
     return 2;
   }
 
-  int finals = 0, crcErrors = 0, values = 0, ch;
-  double wh = -1;
+  int finals = 0, crcErrors = 0, values = 0, mismatches = 0, ch;
+  double wh = -1, entryWh;
   sml_states_t s;
+  sml_obis_entry_t entry;
 
   while ((ch = fgetc(f)) != EOF) {
     unsigned char c = (unsigned char)ch;
@@ -61,6 +63,14 @@ int main(int argc, char *argv[])
       smlOBISWh(wh);
       if (wh >= 0) {
         values++;
+      }
+      if (smlOBISEntry(entry) && entry.unit == SML_WATT_HOUR) {
+        entryWh = (double)entry.value;
+        for (; entry.scaler < 0; entry.scaler++) entryWh /= 10;
+        for (; entry.scaler > 0; entry.scaler--) entryWh *= 10;
+        if (entryWh != wh) {
+          mismatches++;
+        }
       }
     }
     if (s == SML_FINAL) {
@@ -72,14 +82,15 @@ int main(int argc, char *argv[])
   }
   fclose(f);
 
-  printf("messages: %d, crc errors: %d, 1.8.0 values: %d (last %.1f Wh)\n",
-         finals, crcErrors, values, wh);
+  printf("messages: %d, crc errors: %d, 1.8.0 values: %d (last %.1f Wh), "
+         "entry mismatches: %d\n",
+         finals, crcErrors, values, wh, mismatches);
 
   if (broken) {
     return 0;
   }
   if (finals == 0 || (crcErrors > 0 && !allowCrcErrors) ||
-      (values == 0 && need180)) {
+      (values == 0 && need180) || mismatches > 0) {
     return 1;
   }
   return 0;
