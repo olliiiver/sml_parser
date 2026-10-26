@@ -220,6 +220,10 @@ Calculated checksum: C6E8
 >>> Power T1+T2 (1-0:1.8.0)..: 7238000.000 Wh
 ```
 
+## Used by
+
+- [Energy2Shelly_ESP](https://github.com/TheRealMoeder/Energy2Shelly_ESP)
+
 ## Links
 
 The following sites provided a lot of helpful information to me.
