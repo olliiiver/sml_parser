@@ -34,6 +34,9 @@ jobs:
           cd test
           platformio test -e native
 
+      - name: Parse real-world dumps from libsml-testing
+        run: test/libsml-testing/run.sh
+
   publish:
     needs: test
     if: github.ref == 'refs/heads/main' && github.repository_owner == 'olliiiver'
