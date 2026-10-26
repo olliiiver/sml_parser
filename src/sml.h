@@ -106,7 +106,7 @@ typedef enum {
 
 /*! Parse a single byte of an SML message and return the status after parsing
  * that. */
-sml_states_t smlState(unsigned char &byte);
+sml_states_t smlState(unsigned char byte);
 
 /* ! Return whether the 6-character OBIS identifier (binary encoded) matches to
  * the last received message.
@@ -177,7 +177,7 @@ class SmlParser
 
     /*! Parse a single byte of an SML message and return the status after parsing
      * that. */
-    sml_states_t smlState(unsigned char &byte);
+    sml_states_t smlState(unsigned char byte);
 
     /* ! Return whether the 6-character OBIS identifier (binary encoded) matches to
      * the last received message.
@@ -244,11 +244,11 @@ class SmlParser
 	void reset();
 	
   private:
-    void crc16(unsigned char &byte);
+    void crc16(unsigned char byte);
     void setState(sml_states_t state, int byteLen);
     void pushListBuffer(unsigned char byte);
     void smlNewList(unsigned char size);
-    void checkMagicByte(unsigned char &byte);
+    void checkMagicByte(unsigned char byte);
     void reduceList();
 
 	static const int MAX_LIST_SIZE = 80;

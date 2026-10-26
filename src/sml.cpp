@@ -61,7 +61,7 @@ void SmlParser::reset()
    listPos = 0;
 }
 
-void SmlParser::crc16(unsigned char &byte)
+void SmlParser::crc16(unsigned char byte)
 {
   // low nibble first, then high nibble
 #ifdef ARDUINO
@@ -112,7 +112,7 @@ void SmlParser::smlNewList(unsigned char size)
   }
 }
 
-void SmlParser::checkMagicByte(unsigned char &byte)
+void SmlParser::checkMagicByte(unsigned char byte)
 {
   unsigned int size = 0;
   while (currentLevel > 0 && nodes[currentLevel] == 0) {
@@ -197,12 +197,12 @@ void SmlParser::checkMagicByte(unsigned char &byte)
   }
 }
 
-sml_states_t smlState(unsigned char &currentByte)
+sml_states_t smlState(unsigned char currentByte)
 {
   return SmlParser1.smlState(currentByte);
 }
 
-sml_states_t SmlParser::smlState(unsigned char &currentByte)
+sml_states_t SmlParser::smlState(unsigned char currentByte)
 {
   unsigned char size;
   if (len > 0)
