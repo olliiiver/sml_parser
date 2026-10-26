@@ -51,6 +51,9 @@ void setUp(void)
   }
 }
 
+void tearDown(void) {
+    // intentionally left blank, needed for native hosting in Windows (fixes unity.c undefined reference to 'tearDown')
+}
 
 void test_should_return_SumWh(void)
 {

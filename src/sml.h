@@ -4,14 +4,13 @@
 /*!
  * \file Parse and interpret an SML (Smart Message Language) message.
  *
- * The library uses shared static memory to store the parsed SML message.
- * Use \ref smlState to parse the message byte by byte.
- * This will store the parsed data in static memory.
+ * Use \ref smlState (or \ref SmlParser::smlState) to parse the message byte by byte.
+ * This will cache the parsed data in the memory provided by the global instance \ref ::SmlParser1.
  * To access values, check whether the OBIS code you are interested in has just
- * been parsed via \ref smlOBISCheck and if so, parse that value using \ref
- * smlOBISByUnit to get the data in full precision or one of the convenience
- * functions like \ref smlOBISW to get the data directly as double in the
- * specified unit.
+ * been parsed via \ref smlOBISCheck (or \ref SmlParser::smlOBISCheck) and if so, parse that value
+ * using \ref smlOBISByUnit (or \ref SmlParser::smlOBISByUnit) to get the data in full precision or
+ * one of the convenience functions like \ref smlOBISW (or \ref SmlParser::smlOBISW) to get
+ * the data directly as double in the specified unit.
  */
 
 #include <stdbool.h>
@@ -133,6 +132,15 @@ bool smlOBISCheck(const unsigned char *obis);
  */
 void smlOBISManufacturer(unsigned char *str, int maxSize);
 
+/*! Copies the unique id (server id) of the smart meter device into the
+ * provided buffer \p bytes, at most \p maxSize bytes.
+ * Use this after reading OBIS code `{0x01, 0x00, 0x00, 0x00, 0x09, 0xff}`
+ * i.e. 1-0:0.0.9*255.
+ *
+ * \return Returns the number of bytes copied to the buffer.
+ */
+int smlOBISServerId(unsigned char* bytes, int maxSize);
+
 /*! Copy the value last read into \p val and the read scaler into \p scaler and
  * ensure that it has unit \p unit . If the unit was assumed wrongly, set \p val
  * to -1.
@@ -159,5 +167,114 @@ void smlOBISAmpere(double &a);
 void smlOBISHertz(double &h);
 /*! Convenience function to get a reading in Degrees.*/
 void smlOBISDegree(double &d);
+
+/*! Provides parsing functionality for SML messages */
+class SmlParser
+{
+  public:
+    SmlParser();
+
+    /*! Parse a single byte of an SML message and return the status after parsing
+     * that. */
+    sml_states_t smlState(unsigned char &byte);
+
+    /* ! Return whether the 6-character OBIS identifier (binary encoded) matches to
+     * the last received message.
+     * If it does, use one of the specific functions to retrieve the value.
+     *
+     * Calling this function makes sense after a list was received and parsed, i.e.
+     * after the state was \ref SML_LISTEND .
+     *
+     * OBIS (Object Identification System) identifies the kind of message that was
+     * received in the format `A-B:C.D.E*F`, the encoding in \p obis is
+     * an array `{A, B, C, D, E, F}`.
+     * For example `{0x01, 0x00, 0x01, 0x08, 0x01, 0xff}` encodes `1-0:1.8.1*255`,
+     which is the electric meter reading.
+     * If the message matches this particular OBIS identifier, we know that a meter
+     reading in Wh (Watt hours) was received and we can then read it using \ref
+     smlOBISWh.
+     */
+    bool smlOBISCheck(const unsigned char *obis);
+
+    /*! Copy the first \p maxSize bytes of the name/identifier of the manufacturer
+     * into buffer \p str. Use this after reading OBIS code `{0x81, 0x81, 0xc7,
+     * 0x82, 0x03, 0xff}` i.e. 129-129:199.130.3*255.
+     */
+    void smlOBISManufacturer(unsigned char *str, int maxSize);
+	
+    /*! Copies the unique id (server id) of the smart meter device into the
+     * provided buffer \p bytes, at most \p maxSize bytes.
+     * Use this after reading OBIS code `{0x01, 0x00, 0x00, 0x00, 0x09, 0xff}`
+     * i.e. 1-0:0.0.9*255.
+     *
+     * \return Returns the number of bytes copied to the buffer.
+     */
+    int smlOBISServerId(unsigned char* bytes, int maxSize);
+
+    /*! Copy the value last read into \p val and the read scaler into \p scaler and
+     * ensure that it has unit \p unit . If the unit was assumed wrongly, set \p val
+     * to -1.
+     * The final value is `val x 10^scaler`.
+     *
+     * There are 'convenience' functions that wrap this function to return the
+     * actual value as double, see below.
+     *
+     * \return nothing, but set \p val to -1 in case of an error.
+     */
+    void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit);
+
+    // Be aware that double on Arduino UNO is just 32 bit
+
+    /*! Convenience function to get a reading in Watt hours.*/
+    void smlOBISWh(double &wh);
+    /*! Convenience function to get a reading in Watts.*/
+    void smlOBISW(double &w);
+    /*! Convenience function to get a reading in Volts.*/
+    void smlOBISVolt(double &v);
+    /*! Convenience function to get a reading in Amperes.*/
+    void smlOBISAmpere(double &a);
+    /*! Convenience function to get a reading in Hertz.*/
+    void smlOBISHertz(double &h);
+    /*! Convenience function to get a reading in Degrees.*/
+    void smlOBISDegree(double &d);
+
+    /*! Resets the state of the instance.*/
+	void reset();
+	
+  private:
+    void crc16(unsigned char &byte);
+    void setState(sml_states_t state, int byteLen);
+    void pushListBuffer(unsigned char byte);
+    void smlNewList(unsigned char size);
+    void checkMagicByte(unsigned char &byte);
+    void reduceList();
+
+	static const int MAX_LIST_SIZE = 80;
+	static const int MAX_TREE_SIZE = 10;
+
+    sml_states_t currentState = SML_START;
+    char nodes[MAX_TREE_SIZE];
+    unsigned char currentLevel = 0;
+    unsigned short crc = 0xFFFF;
+    signed char sc;
+    unsigned short crcMine = 0xFFFF;
+    unsigned short crcReceived = 0x0000;
+    unsigned char len = 4;
+    unsigned char listBuffer[MAX_LIST_SIZE]; /* keeps a list
+	                                            as length + state + data  */
+    unsigned char listPos = 0;
+#ifdef SML_DEBUG
+    char logBuff[200];
+#endif
+};
+
+/*! Provides the parsing state and cached values for the
+ * SML message as passed in through \ref smlState or \ref SmlParser::smlState.
+ * In case it is necessary to parse the SML messages of two (or more)
+ * smart meter devices simultaneously, additional instances should be
+ * provided in the main program and used for the SML messages of the
+ * other smart meter devices.
+ */
+extern SmlParser SmlParser1;
 
 #endif

@@ -34,6 +34,9 @@ jobs:
           cd test
           platformio test -e native
 
+      - name: Parse real-world dumps from libsml-testing
+        run: test/libsml-testing/run.sh
+
   publish:
     needs: test
     if: github.ref == 'refs/heads/main' && github.repository_owner == 'olliiiver'
@@ -66,3 +69,30 @@ jobs:
         env:
           PLATFORMIO_AUTH_TOKEN: ${{ secrets.PIO_TOKEN }}
         run: pio package publish --non-interactive
+
+  release:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository_owner == 'olliiiver'
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: echo "version=$(sed -n 's/^version=//p' library.properties)" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            echo "Release v$VERSION already exists, skipping"
+            exit 0
+          fi
+          git archive --prefix="SML-Parser-$VERSION/" -o "SML-Parser-$VERSION.zip" HEAD
+          gh release create "v$VERSION" "SML-Parser-$VERSION.zip" \
+            --target "$GITHUB_SHA" --title "v$VERSION" --generate-notes

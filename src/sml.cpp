@@ -5,7 +5,6 @@
 #include "smlCrcTable.h"
 
 #ifdef SML_DEBUG
-char logBuff[200];
 
 #ifdef SML_NATIVE
 #define SML_LOG(...)                                                           \
@@ -40,51 +39,60 @@ char logBuff[200];
   } while (0)
 #endif
 
-#define MAX_LIST_SIZE 80
-#define MAX_TREE_SIZE 10
+// Define a single static instance to maintain operation of legacy C style global functions
+// (e.g. see non-member functions smlState, smlOBISCheck, etc.)
+SmlParser SmlParser1;
 
-static sml_states_t currentState = SML_START;
-static char nodes[MAX_TREE_SIZE];
-static unsigned char currentLevel = 0;
-static unsigned short crc = 0xFFFF;
-static signed char sc;
-static unsigned short crcMine = 0xFFFF;
-static unsigned short crcReceived = 0x0000;
-static unsigned char len = 4;
-static unsigned char listBuffer[MAX_LIST_SIZE]; /* keeps a list
-                                                   as length + state + data  */
-static unsigned char listPos = 0;
 
-void crc16(unsigned char &byte)
+SmlParser::SmlParser()
 {
+   reset();
+}
+
+void SmlParser::reset()
+{
+   currentState = SML_START;
+   nodes[0] = 0;
+   currentLevel = 0;
+   crc = 0xFFFF;
+   crcMine = 0xFFFF;
+   crcReceived = 0x0000;
+   len = 4;
+   listPos = 0;
+}
+
+void SmlParser::crc16(unsigned char &byte)
+{
+  // low nibble first, then high nibble
 #ifdef ARDUINO
-  crc =
-      pgm_read_word_near(&smlCrcTable[(byte ^ crc) & 0xff]) ^ (crc >> 8 & 0xff);
+  crc = pgm_read_word_near(&smlCrcTable[(byte ^ crc) & 0x0f]) ^ (crc >> 4);
+  crc = pgm_read_word_near(&smlCrcTable[((byte >> 4) ^ crc) & 0x0f]) ^ (crc >> 4);
 #else
-  crc = smlCrcTable[(byte ^ crc) & 0xff] ^ (crc >> 8 & 0xff);
+  crc = smlCrcTable[(byte ^ crc) & 0x0f] ^ (crc >> 4);
+  crc = smlCrcTable[((byte >> 4) ^ crc) & 0x0f] ^ (crc >> 4);
 #endif
 }
 
-void setState(sml_states_t state, int byteLen)
+void SmlParser::setState(sml_states_t state, int byteLen)
 {
   currentState = state;
   len = byteLen;
 }
 
-void pushListBuffer(unsigned char byte)
+void SmlParser::pushListBuffer(unsigned char byte)
 {
   if (listPos < MAX_LIST_SIZE) {
     listBuffer[listPos++] = byte;
   }
 }
 
-void reduceList()
+void SmlParser::reduceList()
 {
   if (currentLevel >= 0 && nodes[currentLevel] > 0)
     nodes[currentLevel]--;
 }
 
-void smlNewList(unsigned char size)
+void SmlParser::smlNewList(unsigned char size)
 {
   reduceList();
   if (currentLevel < MAX_TREE_SIZE)
@@ -104,7 +112,7 @@ void smlNewList(unsigned char size)
   }
 }
 
-void checkMagicByte(unsigned char &byte)
+void SmlParser::checkMagicByte(unsigned char &byte)
 {
   unsigned int size = 0;
   while (currentLevel > 0 && nodes[currentLevel] == 0) {
@@ -190,6 +198,11 @@ void checkMagicByte(unsigned char &byte)
 }
 
 sml_states_t smlState(unsigned char &currentByte)
+{
+  return SmlParser1.smlState(currentByte);
+}
+
+sml_states_t SmlParser::smlState(unsigned char &currentByte)
 {
   unsigned char size;
   if (len > 0)
@@ -297,24 +310,61 @@ sml_states_t smlState(unsigned char &currentByte)
 
 bool smlOBISCheck(const unsigned char *obis)
 {
+  return SmlParser1.smlOBISCheck(obis);
+}
+
+bool SmlParser::smlOBISCheck(const unsigned char *obis)
+{
   return (memcmp(obis, &listBuffer[2], 6) == 0);
 }
 
 void smlOBISManufacturer(unsigned char *str, int maxSize)
 {
+  SmlParser1.smlOBISManufacturer(str, maxSize);
+}
+
+void SmlParser::smlOBISManufacturer(unsigned char *str, int maxSize)
+{
   int i = 0, pos = 0, size = 0;
+  if (maxSize < 1) return;
   while (i < listPos) {
     size = (int)listBuffer[i];
     i++;
     pos++;
     if (pos == 6) {
       /* get manufacturer at position 6 in list */
-      size = (size > maxSize - 1) ? maxSize : size;
+      if (size > maxSize - 1) size = maxSize - 1; /* leave room for the terminator */
+      if (i + 1 + size > listPos) size = (i + 1 < listPos) ? (listPos - (i + 1)) : 0; /* stay in buffer */
       memcpy(str, &listBuffer[i + 1], size);
-      str[size + 1] = 0;
+      str[size] = 0;
+      break;
     }
     i += size + 1;
   }
+}
+
+int smlOBISServerId(unsigned char* bytes, int maxSize)
+{
+  return SmlParser1.smlOBISServerId(bytes, maxSize);
+}
+
+int SmlParser::smlOBISServerId(unsigned char* bytes, int maxSize)
+{
+    int i = 0, pos = 0, size = 0;
+    while (i < listPos) {
+        size = (int)listBuffer[i];
+        i++;
+        pos++;
+        if (pos == 6) {
+            /* get serverId at position 6 in list */
+            if (size > maxSize) size = (maxSize > 0) ? maxSize : 0;
+            if (i + 1 + size > listPos) size = (i + 1 < listPos) ? (listPos - (i + 1)) : 0; /* stay in buffer */
+            memcpy(bytes, &listBuffer[i + 1], size);
+            return size;
+        }
+        i += size + 1;
+    }
+    return 0;
 }
 
 void smlPow(double &val, signed char &scaler)
@@ -333,32 +383,45 @@ void smlPow(double &val, signed char &scaler)
 
 void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
 {
+  SmlParser1.smlOBISByUnit(val, scaler, unit);
+}
+
+void SmlParser::smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
+{
   unsigned char i = 0, pos = 0, size = 0, y = 0, skip = 0;
   sml_states_t type;
   val = -1; /* unknown or error */
   while (i < listPos) {
     pos++;
+    if (i + 2 > listPos) return; /* need the size and type bytes */
     size = (int)listBuffer[i++];
     type = (sml_states_t)listBuffer[i++];
     if (type == SML_LISTSTART && size > 0) {
       // skip a list inside an obis list
       skip = size;
       while (skip > 0) {
+        if (i + 2 > listPos) return;
         size = (int)listBuffer[i++];
         type = (sml_states_t)listBuffer[i++];
+        if (i + size > listPos) return; /* do not skip past the buffer */
         i += size;
         skip--;
       }
       size = 0;
     }
-    if (pos == 4 && listBuffer[i] != unit) {
-      /* return unknown (-1) if unit does not match */
-      return;
+    if (pos == 4) {
+      if (i >= listPos) return;
+      if (listBuffer[i] != unit) {
+        /* return unknown (-1) if unit does not match */
+        return;
+      }
     }
     if (pos == 5) {
+      if (i >= listPos) return;
       scaler = listBuffer[i];
     }
     if (pos == 6) {
+      if (size < 1 || i + size > listPos) return; /* value must fit in the buffer */
       y = size;
       // initialize 64bit signed integer based on MSB from received value
       val =
@@ -369,11 +432,17 @@ void smlOBISByUnit(long long int &val, signed char &scaler, sml_units_t unit)
       }
       return;
     }
+    if (i + size > listPos) return; /* next entry must stay in the buffer */
     i += size;
   }
 }
 
 void smlOBISWh(double &wh)
+{
+  SmlParser1.smlOBISWh(wh);
+}
+
+void SmlParser::smlOBISWh(double &wh)
 {
   long long int val;
   smlOBISByUnit(val, sc, SML_WATT_HOUR);
@@ -383,6 +452,11 @@ void smlOBISWh(double &wh)
 
 void smlOBISW(double &w)
 {
+  SmlParser1.smlOBISW(w);
+}
+
+void SmlParser::smlOBISW(double &w)
+{
   long long int val;
   smlOBISByUnit(val, sc, SML_WATT);
   w = val;
@@ -390,6 +464,11 @@ void smlOBISW(double &w)
 }
 
 void smlOBISVolt(double &v)
+{
+  SmlParser1.smlOBISVolt(v);
+}
+
+void SmlParser::smlOBISVolt(double &v)
 {
   long long int val;
   smlOBISByUnit(val, sc, SML_VOLT);
@@ -399,6 +478,11 @@ void smlOBISVolt(double &v)
 
 void smlOBISAmpere(double &a)
 {
+  SmlParser1.smlOBISAmpere(a);
+}
+
+void SmlParser::smlOBISAmpere(double &a)
+{
   long long int val;
   smlOBISByUnit(val, sc, SML_AMPERE);
   a = val;
@@ -407,6 +491,11 @@ void smlOBISAmpere(double &a)
 
 void smlOBISHertz(double &h)
 {
+  SmlParser1.smlOBISHertz(h);
+}
+
+void SmlParser::smlOBISHertz(double &h)
+{
   long long int val;
   smlOBISByUnit(val, sc, SML_HERTZ);
   h = val;
@@ -414,6 +503,11 @@ void smlOBISHertz(double &h)
 }
 
 void smlOBISDegree(double &d)
+{
+  SmlParser1.smlOBISDegree(d);
+}
+
+void SmlParser::smlOBISDegree(double &d)
 {
   long long int val;
   smlOBISByUnit(val, sc, SML_DEGREE);
