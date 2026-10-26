@@ -63,11 +63,13 @@ void SmlParser::reset()
 
 void SmlParser::crc16(unsigned char &byte)
 {
+  // low nibble first, then high nibble
 #ifdef ARDUINO
-  crc =
-      pgm_read_word_near(&smlCrcTable[(byte ^ crc) & 0xff]) ^ (crc >> 8 & 0xff);
+  crc = pgm_read_word_near(&smlCrcTable[(byte ^ crc) & 0x0f]) ^ (crc >> 4);
+  crc = pgm_read_word_near(&smlCrcTable[((byte >> 4) ^ crc) & 0x0f]) ^ (crc >> 4);
 #else
-  crc = smlCrcTable[(byte ^ crc) & 0xff] ^ (crc >> 8 & 0xff);
+  crc = smlCrcTable[(byte ^ crc) & 0x0f] ^ (crc >> 4);
+  crc = smlCrcTable[((byte >> 4) ^ crc) & 0x0f] ^ (crc >> 4);
 #endif
 }
 
