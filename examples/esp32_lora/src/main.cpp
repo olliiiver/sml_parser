@@ -1,8 +1,11 @@
 #include "Arduino.h"
 #include <SPI.h>
 #include <U8g2lib.h>
-#include <hal/hal.h>
+
+// lmic.h must come before hal/hal.h
 #include <lmic.h>
+
+#include <hal/hal.h>
 
 #include "keys.h"
 #include "sml.h"
