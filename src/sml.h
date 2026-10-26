@@ -104,9 +104,25 @@ typedef enum {
   SML_COUNT = 255
 } sml_units_t;
 
+/*! A single entry of a list of values (SML_ListEntry), as returned by
+ * \ref smlOBISEntry. It allows to read all values of a meter without knowing
+ * their OBIS codes in advance.
+ */
+typedef struct {
+  unsigned char obis[6]; /* OBIS code `{A, B, C, D, E, F}` */
+  unsigned char unit;    /* sml_units_t, 0 if the meter did not send a unit */
+  signed char scaler;    /* the value is `value x 10^scaler` */
+  sml_states_t type;     /* SML_DATA_SIGNED_INT, SML_DATA_UNSIGNED_INT,
+                            SML_DATA_OCTET_STRING or SML_DATA (other) */
+  long long int value;   /* numeric value, only set for integer types */
+  const unsigned char *bytes; /* raw value, points into the parser buffer and
+                                 is only valid until the next byte is parsed */
+  unsigned char length;       /* number of raw value bytes */
+} sml_obis_entry_t;
+
 /*! Parse a single byte of an SML message and return the status after parsing
  * that. */
-sml_states_t smlState(unsigned char &byte);
+sml_states_t smlState(unsigned char byte);
 
 /* ! Return whether the 6-character OBIS identifier (binary encoded) matches to
  * the last received message.
@@ -126,6 +142,32 @@ sml_states_t smlState(unsigned char &byte);
  */
 bool smlOBISCheck(const unsigned char *obis);
 
+/*! Fill \p entry with OBIS code, unit, scaler and value of the last received
+ * list, if that list is a complete entry of a list of values.
+ *
+ * Call this after the state was \ref SML_LISTEND . In contrast to
+ * \ref smlOBISCheck it does not need to know the OBIS code in advance, e.g. to
+ * print all values a meter sends.
+ *
+ * \return true if \p entry was filled, false if the last list is no entry.
+ */
+bool smlOBISEntry(sml_obis_entry_t &entry);
+
+/*! Format the binary OBIS code \p obis as `A-B:C.D.E*F` into \p str
+ * (e.g. `1-0:1.8.0*255`), at most \p maxSize bytes including the terminator.
+ *
+ * \return the number of characters that would have been written (snprintf).
+ */
+int smlOBISToString(const unsigned char *obis, char *str, int maxSize);
+
+/*! Parse an OBIS code like `1-0:1.8.0*255` from \p str into the 6 byte binary
+ * form \p obis, e.g. to build handlers from a configuration at runtime. If `*F`
+ * is omitted (`1-0:1.8.0`), F is set to 255.
+ *
+ * \return true on success, false if \p str is no valid OBIS code.
+ */
+bool smlOBISFromString(const char *str, unsigned char *obis);
+
 /*! Copy the first \p maxSize bytes of the name/identifier of the manufacturer
  * into buffer \p str. Use this after reading OBIS code `{0x81, 0x81, 0xc7,
  * 0x82, 0x03, 0xff}` i.e. 129-129:199.130.3*255.
@@ -135,7 +177,8 @@ void smlOBISManufacturer(unsigned char *str, int maxSize);
 /*! Copies the unique id (server id) of the smart meter device into the
  * provided buffer \p bytes, at most \p maxSize bytes.
  * Use this after reading OBIS code `{0x01, 0x00, 0x00, 0x00, 0x09, 0xff}`
- * i.e. 1-0:0.0.9*255.
+ * i.e. 1-0:0.0.9*255, or after OBIS code
+ * `{0x01, 0x00, 0x60, 0x01, 0x00, 0xff}` i.e. 1-0:96.1.0*255 (device id).
  *
  * \return Returns the number of bytes copied to the buffer.
  */
@@ -176,7 +219,7 @@ class SmlParser
 
     /*! Parse a single byte of an SML message and return the status after parsing
      * that. */
-    sml_states_t smlState(unsigned char &byte);
+    sml_states_t smlState(unsigned char byte);
 
     /* ! Return whether the 6-character OBIS identifier (binary encoded) matches to
      * the last received message.
@@ -196,6 +239,17 @@ class SmlParser
      */
     bool smlOBISCheck(const unsigned char *obis);
 
+    /*! Fill \p entry with OBIS code, unit, scaler and value of the last received
+     * list, if that list is a complete entry of a list of values.
+     *
+     * Call this after the state was \ref SML_LISTEND . In contrast to
+     * \ref smlOBISCheck it does not need to know the OBIS code in advance, e.g. to
+     * print all values a meter sends.
+     *
+     * \return true if \p entry was filled, false if the last list is no entry.
+     */
+    bool smlOBISEntry(sml_obis_entry_t &entry);
+
     /*! Copy the first \p maxSize bytes of the name/identifier of the manufacturer
      * into buffer \p str. Use this after reading OBIS code `{0x81, 0x81, 0xc7,
      * 0x82, 0x03, 0xff}` i.e. 129-129:199.130.3*255.
@@ -205,7 +259,8 @@ class SmlParser
     /*! Copies the unique id (server id) of the smart meter device into the
      * provided buffer \p bytes, at most \p maxSize bytes.
      * Use this after reading OBIS code `{0x01, 0x00, 0x00, 0x00, 0x09, 0xff}`
-     * i.e. 1-0:0.0.9*255.
+     * i.e. 1-0:0.0.9*255, or after OBIS code
+     * `{0x01, 0x00, 0x60, 0x01, 0x00, 0xff}` i.e. 1-0:96.1.0*255 (device id).
      *
      * \return Returns the number of bytes copied to the buffer.
      */
@@ -242,11 +297,11 @@ class SmlParser
 	void reset();
 	
   private:
-    void crc16(unsigned char &byte);
+    void crc16(unsigned char byte);
     void setState(sml_states_t state, int byteLen);
     void pushListBuffer(unsigned char byte);
     void smlNewList(unsigned char size);
-    void checkMagicByte(unsigned char &byte);
+    void checkMagicByte(unsigned char byte);
     void reduceList();
 
 	static const int MAX_LIST_SIZE = 80;

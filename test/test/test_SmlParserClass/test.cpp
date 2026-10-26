@@ -142,6 +142,20 @@ void test_should_be_final(void)
   TEST_ASSERT_EQUAL_INT(1, extractedData2.isFinal);
 }
 
+// Mimics Serial.read(), which returns an int rvalue
+static int readByte(unsigned int i) { return ehz_bin[i]; }
+
+void test_should_accept_rvalue_byte(void)
+{
+  // smlState takes the byte by value, so smlState(Serial.read()) compiles (#16)
+  SmlParser parser;
+  sml_states_t s = SML_START;
+  for (unsigned int i = 0; i < ehz_bin_len; ++i) {
+    s = parser.smlState(readByte(i));
+  }
+  TEST_ASSERT_EQUAL_INT(SML_FINAL, s);
+}
+
 int runUnityTests(void)
 {
   UNITY_BEGIN();
@@ -150,6 +164,7 @@ int runUnityTests(void)
   RUN_TEST(test_should_return_t1);
   RUN_TEST(test_should_return_SumWh);
   RUN_TEST(test_should_be_final);
+  RUN_TEST(test_should_accept_rvalue_byte);
   return UNITY_END();
 }
 

@@ -61,7 +61,7 @@ void SmlParser::reset()
    listPos = 0;
 }
 
-void SmlParser::crc16(unsigned char &byte)
+void SmlParser::crc16(unsigned char byte)
 {
   // low nibble first, then high nibble
 #ifdef ARDUINO
@@ -95,7 +95,7 @@ void SmlParser::reduceList()
 void SmlParser::smlNewList(unsigned char size)
 {
   reduceList();
-  if (currentLevel < MAX_TREE_SIZE)
+  if (currentLevel < MAX_TREE_SIZE - 1)
     currentLevel++;
   nodes[currentLevel] = size;
   SML_TREELOG(currentLevel, "LISTSTART on level %i with %i nodes\n",
@@ -112,7 +112,7 @@ void SmlParser::smlNewList(unsigned char size)
   }
 }
 
-void SmlParser::checkMagicByte(unsigned char &byte)
+void SmlParser::checkMagicByte(unsigned char byte)
 {
   unsigned int size = 0;
   while (currentLevel > 0 && nodes[currentLevel] == 0) {
@@ -178,6 +178,7 @@ void SmlParser::checkMagicByte(unsigned char &byte)
     if (byte >= 0x80 && byte <= 0x8F) {
       // Datatype Octet String
       setState(SML_HDATA, (byte & 0x0F) << 4);
+      reduceList();
     }
     else if (byte >= 0xF0 && byte <= 0xFF) {
       /* Datatype List of ...*/
@@ -197,12 +198,12 @@ void SmlParser::checkMagicByte(unsigned char &byte)
   }
 }
 
-sml_states_t smlState(unsigned char &currentByte)
+sml_states_t smlState(unsigned char currentByte)
 {
   return SmlParser1.smlState(currentByte);
 }
 
-sml_states_t SmlParser::smlState(unsigned char &currentByte)
+sml_states_t SmlParser::smlState(unsigned char currentByte)
 {
   unsigned char size;
   if (len > 0)
@@ -316,6 +317,96 @@ bool smlOBISCheck(const unsigned char *obis)
 bool SmlParser::smlOBISCheck(const unsigned char *obis)
 {
   return (memcmp(obis, &listBuffer[2], 6) == 0);
+}
+
+bool smlOBISEntry(sml_obis_entry_t &entry)
+{
+  return SmlParser1.smlOBISEntry(entry);
+}
+
+bool SmlParser::smlOBISEntry(sml_obis_entry_t &entry)
+{
+  /* An SML_ListEntry has 7 elements: objName (OBIS), status, valTime, unit,
+     scaler, value and valueSignature. The buffer keeps them as
+     size + type + data, a nested list (e.g. valTime) as size + SML_LISTSTART
+     followed by its elements. */
+  int i = 0, pos = 0, skip = 0, size, y;
+  sml_states_t type;
+  memset(&entry, 0, sizeof(entry));
+  while (i + 2 <= listPos) {
+    size = listBuffer[i++];
+    type = (sml_states_t)listBuffer[i++];
+    if (type == SML_LISTSTART) {
+      /* a nested list counts as a single element, skip its children */
+      if (skip > 0)
+        skip--;
+      else
+        pos++;
+      skip += size;
+      continue;
+    }
+    if (i + size > listPos) return false; /* truncated */
+    if (skip > 0) {
+      skip--;
+      i += size;
+      continue;
+    }
+    pos++;
+    if (pos == 1) {
+      if (size != 6 || type != SML_DATA_OCTET_STRING) return false;
+      memcpy(entry.obis, &listBuffer[i], 6);
+    }
+    else if (pos == 4 && size > 0) {
+      entry.unit = listBuffer[i + size - 1];
+    }
+    else if (pos == 5 && size > 0) {
+      entry.scaler = (signed char)listBuffer[i + size - 1];
+    }
+    else if (pos == 6) {
+      entry.type = (size > 0) ? type : SML_DATA;
+      entry.bytes = &listBuffer[i];
+      entry.length = size;
+      if ((type == SML_DATA_SIGNED_INT || type == SML_DATA_UNSIGNED_INT) &&
+          size > 0 && size <= 8) {
+        entry.value =
+            (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) ? ~0 : 0;
+        for (y = 0; y < size; y++) {
+          entry.value = (entry.value << 8) | listBuffer[i + y];
+        }
+      }
+    }
+    i += size;
+  }
+  return pos == 7 && skip == 0;
+}
+
+int smlOBISToString(const unsigned char *obis, char *str, int maxSize)
+{
+  return snprintf(str, maxSize, "%d-%d:%d.%d.%d*%d", obis[0], obis[1],
+                  obis[2], obis[3], obis[4], obis[5]);
+}
+
+bool smlOBISFromString(const char *str, unsigned char *obis)
+{
+  /* A-B:C.D.E*F, F is optional */
+  static const char separators[] = "-:..*";
+  int n = 0, val;
+  while (n < 6) {
+    if (*str < '0' || *str > '9') return false;
+    for (val = 0; *str >= '0' && *str <= '9'; str++) {
+      val = val * 10 + (*str - '0');
+      if (val > 255) return false;
+    }
+    obis[n++] = (unsigned char)val;
+    if (*str == '\0') break;
+    if (n == 6 || *str != separators[n - 1]) return false;
+    str++;
+  }
+  if (n == 5) {
+    obis[5] = 0xff;
+    return true;
+  }
+  return n == 6;
 }
 
 void smlOBISManufacturer(unsigned char *str, int maxSize)
