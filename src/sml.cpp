@@ -95,7 +95,7 @@ void SmlParser::reduceList()
 void SmlParser::smlNewList(unsigned char size)
 {
   reduceList();
-  if (currentLevel < MAX_TREE_SIZE)
+  if (currentLevel < MAX_TREE_SIZE - 1)
     currentLevel++;
   nodes[currentLevel] = size;
   SML_TREELOG(currentLevel, "LISTSTART on level %i with %i nodes\n",
