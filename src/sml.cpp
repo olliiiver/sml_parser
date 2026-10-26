@@ -178,6 +178,7 @@ void SmlParser::checkMagicByte(unsigned char byte)
     if (byte >= 0x80 && byte <= 0x8F) {
       // Datatype Octet String
       setState(SML_HDATA, (byte & 0x0F) << 4);
+      reduceList();
     }
     else if (byte >= 0xF0 && byte <= 0xFF) {
       /* Datatype List of ...*/
