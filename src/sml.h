@@ -135,7 +135,8 @@ void smlOBISManufacturer(unsigned char *str, int maxSize);
 /*! Copies the unique id (server id) of the smart meter device into the
  * provided buffer \p bytes, at most \p maxSize bytes.
  * Use this after reading OBIS code `{0x01, 0x00, 0x00, 0x00, 0x09, 0xff}`
- * i.e. 1-0:0.0.9*255.
+ * i.e. 1-0:0.0.9*255, or after OBIS code
+ * `{0x01, 0x00, 0x60, 0x01, 0x00, 0xff}` i.e. 1-0:96.1.0*255 (device id).
  *
  * \return Returns the number of bytes copied to the buffer.
  */
@@ -205,7 +206,8 @@ class SmlParser
     /*! Copies the unique id (server id) of the smart meter device into the
      * provided buffer \p bytes, at most \p maxSize bytes.
      * Use this after reading OBIS code `{0x01, 0x00, 0x00, 0x00, 0x09, 0xff}`
-     * i.e. 1-0:0.0.9*255.
+     * i.e. 1-0:0.0.9*255, or after OBIS code
+     * `{0x01, 0x00, 0x60, 0x01, 0x00, 0xff}` i.e. 1-0:96.1.0*255 (device id).
      *
      * \return Returns the number of bytes copied to the buffer.
      */
