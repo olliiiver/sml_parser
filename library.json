@@ -14,7 +14,7 @@
     }
   ],
   "license": "LGPL-2.1-only",
-  "version": "1.00",
+  "version": "1.0.0",
   "frameworks": "*",
   "platforms": "*"
 }
