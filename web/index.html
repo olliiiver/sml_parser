@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SML Parser Playground</title>
+    <meta
+      name="description"
+      content="Decode SML (Smart Message Language) messages from smart meters in your browser, using the SML Parser C library compiled to WebAssembly."
+    />
+    <script>
+      // Apply the stored theme before the first paint to avoid flashing
+      try {
+        const theme = localStorage.getItem("theme");
+        if (theme === "light" || theme === "dark") {
+          document.documentElement.dataset.theme = theme;
+        }
+      } catch (e) {}
+    </script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <h1>SML Parser <span>Playground</span></h1>
+        <p>
+          Paste an SML message from your smart meter to decode it. It runs the
+          <a href="https://github.com/olliiiver/sml_parser">sml_parser</a> C
+          library, compiled to WebAssembly. Your data stays in your browser.
+        </p>
+      </div>
+      <div class="theme" role="radiogroup" aria-label="Color theme">
+        <button type="button" role="radio" data-theme-choice="auto">Auto</button>
+        <button type="button" role="radio" data-theme-choice="light">Light</button>
+        <button type="button" role="radio" data-theme-choice="dark">Dark</button>
+      </div>
+    </header>
+
+    <main class="panes">
+      <section class="pane" aria-labelledby="input-title">
+        <div class="pane-head">
+          <h2 id="input-title">Input</h2>
+          <span id="input-info" class="muted"></span>
+        </div>
+        <textarea
+          id="input"
+          spellcheck="false"
+          autocomplete="off"
+          aria-describedby="input-help"
+          placeholder="1B1B1B1B01010101760…&#10;&#10;or a C array like {0x1b, 0x1b, 0x1b, 0x1b, 0x01, …}&#10;&#10;or drop a .bin file here"
+        ></textarea>
+        <p id="input-error" class="error" hidden></p>
+        <p id="input-help" class="muted small">
+          Accepts hex strings (spaces and line breaks are ignored), C arrays
+          with <code>0x..</code> bytes as in the test headers, or a binary dump
+          dropped onto the field.
+        </p>
+        <div class="samples">
+          <span class="muted small">Samples:</span>
+          <span id="sample-buttons"></span>
+          <button type="button" id="clear" class="link">Clear</button>
+        </div>
+      </section>
+
+      <section class="pane" aria-labelledby="output-title">
+        <div class="pane-head">
+          <h2 id="output-title">Decoded</h2>
+          <span id="output-info" class="muted"></span>
+        </div>
+        <div id="output" aria-live="polite"></div>
+        <details id="log-box">
+          <summary>Parser debug log <span class="muted">(SML_DEBUG)</span></summary>
+          <pre id="log"></pre>
+        </details>
+      </section>
+    </main>
+
+    <footer class="muted small">
+      <a href="https://github.com/olliiiver/sml_parser">GitHub</a> ·
+      <a href="https://registry.platformio.org/libraries/olliiiver/SML%20Parser">PlatformIO</a>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
