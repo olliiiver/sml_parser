@@ -432,7 +432,7 @@ void SmlParser::smlOBISManufacturer(unsigned char *str, int maxSize)
       /* get manufacturer at position 6 in list */
       if (size > maxSize - 1) size = maxSize - 1; /* leave room for the terminator */
       if (i + 1 + size > listPos) size = (i + 1 < listPos) ? (listPos - (i + 1)) : 0; /* stay in buffer */
-      if (size > 0) memcpy(str, &listBuffer[i + 1], size); /* i + 1 may be past the buffer */
+      for (int j = 0; j < size; j++) str[j] = listBuffer[i + 1 + j];
       str[size] = 0;
       break;
     }
@@ -456,7 +456,7 @@ int SmlParser::smlOBISServerId(unsigned char* bytes, int maxSize)
             /* get serverId at position 6 in list */
             if (size > maxSize) size = (maxSize > 0) ? maxSize : 0;
             if (i + 1 + size > listPos) size = (i + 1 < listPos) ? (listPos - (i + 1)) : 0; /* stay in buffer */
-            if (size > 0) memcpy(bytes, &listBuffer[i + 1], size); /* i + 1 may be past the buffer */
+            for (int j = 0; j < size; j++) bytes[j] = listBuffer[i + 1 + j];
             return size;
         }
         i += size + 1;
