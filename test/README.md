@@ -16,3 +16,12 @@ and check that the checksums match and `1-0:1.8.0*255` provides a value:
 ```
 ./libsml-testing/run.sh
 ```
+
+## Fuzzing
+
+Feed generated and mutated SML data into the parser, built with AddressSanitizer
+and UndefinedBehaviorSanitizer, see [fuzz/README.md](fuzz/README.md):
+
+```
+./fuzz/run.sh
+```

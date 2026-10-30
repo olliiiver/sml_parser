@@ -5,3 +5,4 @@ lib/
 .vscode/launch.json
 .vscode/ipch
 .DS_Store
+fuzz-crash-*.bin
