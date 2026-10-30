@@ -517,13 +517,15 @@ void SmlParser::smlOBISByUnit(long long int &val, signed char &scaler, sml_units
     if (pos == 6) {
       if (size < 1 || i + size > listPos) return; /* value must fit in the buffer */
       y = size;
-      // initialize 64bit signed integer based on MSB from received value
-      val =
-          (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) ? ~0 : 0;
+      // initialize 64bit integer based on MSB from received value, unsigned
+      // because left-shifting a negative signed value is undefined behaviour
+      unsigned long long v =
+          (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) ? ~0ULL : 0;
       for (y = 0; y < size; y++) {
-        // left shift received bytes to 64 bit signed integer
-        val = (val << 8) | listBuffer[i + y];
+        // left shift received bytes to 64 bit integer
+        v = (v << 8) | listBuffer[i + y];
       }
+      val = (long long)v;
       return;
     }
     if (i + size > listPos) return; /* next entry must stay in the buffer */
