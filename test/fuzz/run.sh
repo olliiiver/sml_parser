@@ -16,11 +16,11 @@ mkdir "$TMP/src"
 cp "$SRC"/*.cpp "$SRC"/*.h "$DIR/checked.h" "$TMP/src/"
 sed -e 's/^#include <stdbool.h>$/#include <stdbool.h>\
 #include "checked.h"/' \
-  -e 's/^\( *\)char nodes\[MAX_TREE_SIZE\];/\1Checked<char, MAX_TREE_SIZE> nodes;/' \
+  -e 's/^\( *\)unsigned char nodes\[MAX_TREE_SIZE\];/\1Checked<unsigned char, MAX_TREE_SIZE> nodes;/' \
   -e 's/^\( *\)unsigned char listBuffer\[MAX_LIST_SIZE\];/\1Checked<unsigned char, MAX_LIST_SIZE> listBuffer;/' \
   "$SRC/sml.h" > "$TMP/src/sml.h"
 if ! grep -q "Checked<unsigned char, MAX_LIST_SIZE> listBuffer" "$TMP/src/sml.h" ||
-  ! grep -q "Checked<char, MAX_TREE_SIZE> nodes" "$TMP/src/sml.h"; then
+  ! grep -q "Checked<unsigned char, MAX_TREE_SIZE> nodes" "$TMP/src/sml.h"; then
   echo "Could not instrument src/sml.h, please update the patterns in run.sh" >&2
   exit 1
 fi

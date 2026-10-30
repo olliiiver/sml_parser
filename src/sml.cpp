@@ -277,7 +277,10 @@ sml_states_t SmlParser::smlState(unsigned char currentByte)
     SML_TREELOG(currentLevel, " Data (length = %i): ", size);
     break;
   case SML_LISTEXTENDED:
-    size = len + (currentByte & 0x0F);
+    /* len holds the high nibble shifted by 4 and was decremented for this
+       byte. Unlike for octet strings, a list length does not include the TL
+       bytes. */
+    size = len + 1 + (currentByte & 0x0F);
     SML_TREELOG(currentLevel, "Extended List with Size=%i\n", size);
     smlNewList(size);
     break;
@@ -429,7 +432,7 @@ void SmlParser::smlOBISManufacturer(unsigned char *str, int maxSize)
       /* get manufacturer at position 6 in list */
       if (size > maxSize - 1) size = maxSize - 1; /* leave room for the terminator */
       if (i + 1 + size > listPos) size = (i + 1 < listPos) ? (listPos - (i + 1)) : 0; /* stay in buffer */
-      memcpy(str, &listBuffer[i + 1], size);
+      if (size > 0) memcpy(str, &listBuffer[i + 1], size); /* i + 1 may be past the buffer */
       str[size] = 0;
       break;
     }
@@ -453,7 +456,7 @@ int SmlParser::smlOBISServerId(unsigned char* bytes, int maxSize)
             /* get serverId at position 6 in list */
             if (size > maxSize) size = (maxSize > 0) ? maxSize : 0;
             if (i + 1 + size > listPos) size = (i + 1 < listPos) ? (listPos - (i + 1)) : 0; /* stay in buffer */
-            memcpy(bytes, &listBuffer[i + 1], size);
+            if (size > 0) memcpy(bytes, &listBuffer[i + 1], size); /* i + 1 may be past the buffer */
             return size;
         }
         i += size + 1;
@@ -485,6 +488,7 @@ void SmlParser::smlOBISByUnit(long long int &val, signed char &scaler, sml_units
   unsigned char i = 0, pos = 0, size = 0, y = 0, skip = 0;
   sml_states_t type;
   val = -1; /* unknown or error */
+  scaler = 0; /* do not leave a stale or uninitialised scaler on error */
   while (i < listPos) {
     pos++;
     if (i + 2 > listPos) return; /* need the size and type bytes */
