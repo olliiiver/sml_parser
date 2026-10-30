@@ -368,11 +368,14 @@ bool SmlParser::smlOBISEntry(sml_obis_entry_t &entry)
       entry.length = size;
       if ((type == SML_DATA_SIGNED_INT || type == SML_DATA_UNSIGNED_INT) &&
           size > 0 && size <= 8) {
-        entry.value =
-            (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) ? ~0 : 0;
+        /* Accumulate in an unsigned type: left-shifting a negative signed value
+           is undefined behaviour. The two's-complement bit pattern is unchanged. */
+        unsigned long long v =
+            (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) ? ~0ULL : 0;
         for (y = 0; y < size; y++) {
-          entry.value = (entry.value << 8) | listBuffer[i + y];
+          v = (v << 8) | listBuffer[i + y];
         }
+        entry.value = (long long)v;
       }
     }
     i += size;
