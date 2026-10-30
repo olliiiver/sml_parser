@@ -10,7 +10,12 @@ It's actively maintained and has already been used in various projects with mete
 
 The API is described in [`sml.h`](src/sml.h) via doxygen comments.
 
-**[Try it in your browser](https://olliiiver.github.io/sml_parser/)**: paste an SML message from your meter and see what the parser makes of it (see [web](web/)).
+## Playground
+
+> [!TIP]
+> **[Try it in your browser](https://olliiiver.github.io/sml_parser/)**: paste an SML message from your meter and see what the parser makes of it. The playground runs this library compiled to WebAssembly, so your data never leaves your browser (see [web](web/)).
+
+[![SML Parser Playground](docs/playground.png)](https://olliiiver.github.io/sml_parser/)
 
 ## Examples
 
