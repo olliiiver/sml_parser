@@ -10,7 +10,12 @@ It's actively maintained and has already been used in various projects with mete
 
 The API is described in [`sml.h`](src/sml.h) via doxygen comments.
 
-**[Try it in your browser](https://olliiiver.github.io/sml_parser/)**: paste an SML message from your meter and see what the parser makes of it (see [web](web/)).
+## Playground
+
+> [!TIP]
+> **[Try it in your browser](https://olliiiver.github.io/sml_parser/)**: paste an SML message from your meter and see what the parser makes of it. The playground runs this library compiled to WebAssembly, so your data never leaves your browser (see [web](web/)).
+
+[![SML Parser Playground](docs/playground.png)](https://olliiiver.github.io/sml_parser/)
 
 ## Examples
 
@@ -101,6 +106,32 @@ if (s == SML_LISTEND && smlOBISEntry(entry)) {
 ```
 
 See the [native_entries](examples/native_entries/) example.
+
+## Memory usage
+
+The parser processes the data byte by byte and never stores a whole message. Each `SmlParser` instance needs 101 bytes of RAM on an ATmega (e.g. Arduino Uno), all static, without heap usage:
+
+| Member                                   | Bytes   | Purpose                                                                                       |
+| ---------------------------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| `listBuffer[80]`                         | 80      | Holds the current list entry (OBIS code, unit, scaler, value, ...) until `SML_LISTEND`         |
+| `nodes[10]`                              | 10      | Nesting stack, remaining elements per list level (up to 10 levels)                            |
+| `currentState`                           | 1       | Current state of the state machine                                                            |
+| `crc`, `crcMine`, `crcReceived`          | 6       | Running CRC-16, calculated and received checksum                                              |
+| `currentLevel`, `len`, `listPos`, `sc`   | 4       | Current nesting level, remaining bytes of the field, buffer position, scaler of the last value |
+| **Total**                                | **101** |                                                                                               |
+
+On 32 bit platforms like the ESP32 an instance needs 102 bytes because of alignment. The global instance `SmlParser1` used by the C style functions counts once, every additional instance (e.g. for a second meter) needs the same again. With `SML_DEBUG` enabled, a 200 byte log buffer is added per instance. An `sml_obis_entry_t` returned by `smlOBISEntry` takes 20 bytes on an ATmega and 32 bytes on an ESP32.
+
+Flash usage on an ATmega328P (Arduino Uno, avr-gcc 7.3, `-Os`), measured as the difference to an empty sketch:
+
+| Functions used                                   | Flash        |
+| ------------------------------------------------ | ------------ |
+| `smlState` (parsing only)                        | 1.1 KB       |
+| `smlOBISCheck` and `smlOBISByUnit` (integer)     | + 0.6 KB     |
+| `smlOBISCheck` and `smlOBISWh` (floating point)  | + 1.4 KB     |
+| `smlOBISEntry`                                   | + 0.6 KB     |
+
+The floating point routines behind `smlOBISWh` and the other unit functions are shared if your program already uses `double`. Use `smlOBISByUnit` or `smlOBISEntry` to avoid them. Parsing a byte with `smlState` needs less than 32 bytes of stack.
 
 ## Debug mode
 

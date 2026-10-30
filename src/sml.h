@@ -15,7 +15,7 @@
 
 #include <stdbool.h>
 
-typedef enum {
+typedef enum : unsigned char {
   SML_START,
   SML_END,
   SML_VERSION,
@@ -308,10 +308,10 @@ class SmlParser
 	static const int MAX_TREE_SIZE = 10;
 
     sml_states_t currentState = SML_START;
-    char nodes[MAX_TREE_SIZE];
+    unsigned char nodes[MAX_TREE_SIZE]; /* list sizes go up to 255 */
     unsigned char currentLevel = 0;
     unsigned short crc = 0xFFFF;
-    signed char sc;
+    signed char sc = 0;
     unsigned short crcMine = 0xFFFF;
     unsigned short crcReceived = 0x0000;
     unsigned char len = 4;

@@ -277,7 +277,10 @@ sml_states_t SmlParser::smlState(unsigned char currentByte)
     SML_TREELOG(currentLevel, " Data (length = %i): ", size);
     break;
   case SML_LISTEXTENDED:
-    size = len + (currentByte & 0x0F);
+    /* len holds the high nibble shifted by 4 and was decremented for this
+       byte. Unlike for octet strings, a list length does not include the TL
+       bytes. */
+    size = len + 1 + (currentByte & 0x0F);
     SML_TREELOG(currentLevel, "Extended List with Size=%i\n", size);
     smlNewList(size);
     break;
@@ -368,11 +371,14 @@ bool SmlParser::smlOBISEntry(sml_obis_entry_t &entry)
       entry.length = size;
       if ((type == SML_DATA_SIGNED_INT || type == SML_DATA_UNSIGNED_INT) &&
           size > 0 && size <= 8) {
-        entry.value =
-            (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) ? ~0 : 0;
+        /* Accumulate in an unsigned type: left-shifting a negative signed value
+           is undefined behaviour. The two's-complement bit pattern is unchanged. */
+        unsigned long long v =
+            (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) ? ~0ULL : 0;
         for (y = 0; y < size; y++) {
-          entry.value = (entry.value << 8) | listBuffer[i + y];
+          v = (v << 8) | listBuffer[i + y];
         }
+        entry.value = (long long)v;
       }
     }
     i += size;
@@ -426,7 +432,7 @@ void SmlParser::smlOBISManufacturer(unsigned char *str, int maxSize)
       /* get manufacturer at position 6 in list */
       if (size > maxSize - 1) size = maxSize - 1; /* leave room for the terminator */
       if (i + 1 + size > listPos) size = (i + 1 < listPos) ? (listPos - (i + 1)) : 0; /* stay in buffer */
-      memcpy(str, &listBuffer[i + 1], size);
+      for (int j = 0; j < size; j++) str[j] = listBuffer[i + 1 + j];
       str[size] = 0;
       break;
     }
@@ -450,7 +456,7 @@ int SmlParser::smlOBISServerId(unsigned char* bytes, int maxSize)
             /* get serverId at position 6 in list */
             if (size > maxSize) size = (maxSize > 0) ? maxSize : 0;
             if (i + 1 + size > listPos) size = (i + 1 < listPos) ? (listPos - (i + 1)) : 0; /* stay in buffer */
-            memcpy(bytes, &listBuffer[i + 1], size);
+            for (int j = 0; j < size; j++) bytes[j] = listBuffer[i + 1 + j];
             return size;
         }
         i += size + 1;
@@ -482,6 +488,7 @@ void SmlParser::smlOBISByUnit(long long int &val, signed char &scaler, sml_units
   unsigned char i = 0, pos = 0, size = 0, y = 0, skip = 0;
   sml_states_t type;
   val = -1; /* unknown or error */
+  scaler = 0; /* do not leave a stale or uninitialised scaler on error */
   while (i < listPos) {
     pos++;
     if (i + 2 > listPos) return; /* need the size and type bytes */
@@ -514,13 +521,15 @@ void SmlParser::smlOBISByUnit(long long int &val, signed char &scaler, sml_units
     if (pos == 6) {
       if (size < 1 || i + size > listPos) return; /* value must fit in the buffer */
       y = size;
-      // initialize 64bit signed integer based on MSB from received value
-      val =
-          (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) ? ~0 : 0;
+      // initialize 64bit integer based on MSB from received value, unsigned
+      // because left-shifting a negative signed value is undefined behaviour
+      unsigned long long v =
+          (type == SML_DATA_SIGNED_INT && (listBuffer[i] & (1 << 7))) ? ~0ULL : 0;
       for (y = 0; y < size; y++) {
-        // left shift received bytes to 64 bit signed integer
-        val = (val << 8) | listBuffer[i + y];
+        // left shift received bytes to 64 bit integer
+        v = (v << 8) | listBuffer[i + y];
       }
+      val = (long long)v;
       return;
     }
     if (i + size > listPos) return; /* next entry must stay in the buffer */
