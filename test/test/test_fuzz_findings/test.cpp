@@ -55,7 +55,7 @@ void test_should_not_read_past_the_list_buffer(void)
 
   TEST_ASSERT_EQUAL_INT(0, parser.smlOBISServerId(bytes, sizeof(bytes)));
   parser.smlOBISManufacturer(manuf, sizeof(manuf));
-  TEST_ASSERT_EQUAL_STRING("", (char *)manuf);
+  TEST_ASSERT_EQUAL_UINT8(0, manuf[0]);
 }
 
 void test_should_reset_scaler_if_unit_does_not_match(void)
