@@ -15,7 +15,7 @@
 
 #include <stdbool.h>
 
-typedef enum {
+typedef enum : unsigned char {
   SML_START,
   SML_END,
   SML_VERSION,
