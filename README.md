@@ -8,28 +8,28 @@ The library will control the last CRC value to check if the received data is cor
 
 It's actively maintained and has already been used in various projects with meters from EMH, EFR, EasyMeter, etc.
 
-The API is described in [`sml.h`](src/sml.h) via doxygen comments.
+The API is described in [`sml.h`](https://github.com/olliiiver/sml_parser/blob/develop/src/sml.h) via doxygen comments.
 
 ## Playground
 
 > [!TIP]
-> **[Try it in your browser](https://olliiiver.github.io/sml_parser/)**: paste an SML message from your meter and see what the parser makes of it. The playground runs this library compiled to WebAssembly, so your data never leaves your browser (see [web](web/)).
+> **[Try it in your browser](https://olliiiver.github.io/sml_parser/)**: paste an SML message from your meter and see what the parser makes of it. The playground runs this library compiled to WebAssembly, so your data never leaves your browser (see [web](https://github.com/olliiiver/sml_parser/tree/develop/web)).
 
-[![SML Parser Playground](docs/playground.png)](https://olliiiver.github.io/sml_parser/)
+[![SML Parser Playground](https://raw.githubusercontent.com/olliiiver/sml_parser/develop/docs/playground.png)](https://olliiiver.github.io/sml_parser/)
 
 ## Examples
 
 | Directory                                              | Description                                                    |
 | ------------------------------------------------------ | -------------------------------------------------------------- |
-| [arduino](examples/arduino/)                           | Loops through static data and outputs debug messages to serial |
-| [arduino_serial](examples/arduino_serial/)             | Reads data from Arduino Pin 8 and outputs debug to serial      |
-| [esp32_lora](examples/esp32_lora/)                     | Forward energy usage to LoraWAN (The Things Network)           |
-| [esp32_m5stack_sender](examples/esp32_m5stack_sender/) | Use m5stack to produce a message for testing                   |
-| [esp32_receiver](examples/esp32_receiver/)             | Receive messages and show infos on a display                   |
-| [native](examples/native/)                             | Test library locally                                           |
-| [native_entries](examples/native_entries/)             | Print all values and watch OBIS codes configured as strings    |
+| [arduino](https://github.com/olliiiver/sml_parser/tree/develop/examples/arduino)                           | Loops through static data and outputs debug messages to serial |
+| [arduino_serial](https://github.com/olliiiver/sml_parser/tree/develop/examples/arduino_serial)             | Reads data from Arduino Pin 8 and outputs debug to serial      |
+| [esp32_lora](https://github.com/olliiiver/sml_parser/tree/develop/examples/esp32_lora)                     | Forward energy usage to LoraWAN (The Things Network)           |
+| [esp32_m5stack_sender](https://github.com/olliiiver/sml_parser/tree/develop/examples/esp32_m5stack_sender) | Use m5stack to produce a message for testing                   |
+| [esp32_receiver](https://github.com/olliiiver/sml_parser/tree/develop/examples/esp32_receiver)             | Receive messages and show infos on a display                   |
+| [native](https://github.com/olliiiver/sml_parser/tree/develop/examples/native)                             | Test library locally                                           |
+| [native_entries](https://github.com/olliiiver/sml_parser/tree/develop/examples/native_entries)             | Print all values and watch OBIS codes configured as strings    |
 
-The easiest way to test the library would be over the [native](examples/native/) example.
+The easiest way to test the library would be over the [native](https://github.com/olliiiver/sml_parser/tree/develop/examples/native) example.
 
 ## Example usage
 
@@ -105,7 +105,7 @@ if (s == SML_LISTEND && smlOBISEntry(entry)) {
 }
 ```
 
-See the [native_entries](examples/native_entries/) example.
+See the [native_entries](https://github.com/olliiiver/sml_parser/tree/develop/examples/native_entries) example.
 
 ## Memory usage
 
